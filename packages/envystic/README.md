@@ -1,8 +1,8 @@
 # Envystic
-[![pub package](https://img.shields.io/pub/v/envystic.svg)](https://pub.dartlang.org/packages/envystic) [![GitHub license](https://img.shields.io/github/license/itisnajim/envystic)](https://github.com/itisnajim/envystic/blob/master/LICENSE)  [![GitHub issues](https://img.shields.io/github/issues/itisnajim/envystic)](https://github.com/itisnajim/envystic/issues)
+[![pub package](https://img.shields.io/pub/v/envystic.svg)](https://pub.dartlang.org/packages/envystic) [![GitHub license](https://img.shields.io/github/license/itisnajim/envystic)](https://github.com/itisnajim/envystic/blob/main/LICENSE)  [![GitHub issues](https://img.shields.io/github/issues/itisnajim/envystic)](https://github.com/itisnajim/envystic/issues)
 
 
-Envystic is a Dart/Flutter package that simplifies the management of environment variables and provides an extra layer of security. With Envystic, you can effortlessly handle environment variables in your Dart and Flutter projects, ensuring cleaner and more secure code.
+Envystic is a Dart/Flutter package that simplifies the management of environment variables (dotenv) and provides an extra layer of security. With Envystic, you can effortlessly handle environment variables in your Dart and Flutter projects, ensuring cleaner and more secure code.
 
 ## Features
 1. **Easy Environment Variable Management**: Envystic simplifies the management of environment variables by providing a convenient and structured way to define and access them in your Dart and Flutter projects.
