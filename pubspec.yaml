@@ -1,0 +1,10 @@
+name: "envystic_monorepo"
+publish_to: none
+
+dev_dependencies:
+  melos: ^3.0.1
+  path: ^1.8.3
+  yaml: ^3.1.2
+
+environment:
+  sdk: ">=2.19.0 <3.0.0"
