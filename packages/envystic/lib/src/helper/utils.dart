@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:envystic/src/encrypter.dart';
+import 'encrypter.dart';
 
 bool _isNullable<T>() => null is T;
 
@@ -49,6 +49,7 @@ T _parseValue<T>(
   }
 }
 
+/// **Ignore This Method** Used by the package
 String? encodeValue(String? value, String? encryptionKey) {
   if (value == null) return null;
 
@@ -60,6 +61,7 @@ String? encodeValue(String? value, String? encryptionKey) {
   return base64.encode(encryptedBytes);
 }
 
+/// **Ignore This Method** Used by the package
 String? decodeValue(String? encodedValue, String? encryptionKey) {
   if (encodedValue == null) return null;
 
@@ -73,6 +75,7 @@ String? decodeValue(String? encodedValue, String? encryptionKey) {
   return String.fromCharCodes(decryptedBytes);
 }
 
+/// **Ignore This Method** Used by the package
 T getEntryValue<T>(
   String key,
   String encodedEntries,

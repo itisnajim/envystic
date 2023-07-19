@@ -11,7 +11,7 @@ class Envystic {
   final String path;
 
   /// The encryption key used to encrypt the variable values.
-  /// If [encryptionKey] is `null`, no encryption is applied.
+  /// If [encryptionKey] is `null`, a `base64` encoding is applied to the values for a simple level of protection.
   final String? encryptionKey;
 
   /// The format of key names in the environment file (e.g., `.env` file).
@@ -23,7 +23,7 @@ class Envystic {
   /// [path] specifies the path to the environment variables file.
   /// If not provided, the default is '.env'.
   /// [encryptionKey] specifies the encryption key used to encrypt the values.
-  /// If `null`, no encryption is applied.
+  /// If `null`, a `base64` encoding is applied to the values for a simple level of protection.
   const Envystic({
     String? path,
     this.encryptionKey,

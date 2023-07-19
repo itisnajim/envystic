@@ -1,0 +1,5 @@
+dependency_overrides:
+  envystic: 
+    path: "../packages/envystic"
+  envystic_generator: 
+    path: "../packages/envystic_generator"

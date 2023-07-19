@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 
+/// **Ignore This Class** Used by the package
 class Encrypter {
   final Uint8List key;
 
