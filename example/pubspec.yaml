@@ -8,13 +8,11 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  envystic:
-    path: "../packages/envystic"
+  envystic: ^0.0.1
   # path: ^1.8.0
 
 dev_dependencies:
   build_runner: ^2.4.6
-  envystic_generator:
-    path: "../packages/envystic_generator"
+  envystic_generator: ^0.0.1
   lints: ^2.0.0
   test: ^1.21.0
