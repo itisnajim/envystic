@@ -14,6 +14,10 @@ abstract class Env {
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
   int? get key2;
 
+  @EnvysticField(
+      name: 'MY_SPECIAL_KEY') // Test from System environment variables
+  int? get specialKey;
+
   // ignored
   String get drink => 'Coffee';
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -24,7 +26,9 @@ abstract class Field<T> {
     final type = element.type;
     final fieldKey = element.name;
     final envKey = getEnvKey(fieldKey, keyFormat, nameOverride);
-    final value = values?[envKey] ?? defaultValue?.toStringValue();
+    final value = values?[envKey] ??
+        Platform.environment[envKey] ??
+        defaultValue?.toStringValue();
     final nullable = type.isNullableType;
 
     if (value == null && !nullable && !type.isLikeDynamic) {

@@ -5,6 +5,7 @@ void main() {
   const env = Env();
   print('env.key1 ${env.key1}');
   print('env.key2 ${env.key2}');
+  print('env.specialKey ${env.specialKey}');
   print('env.drink ${env.drink}');
 
   const env2 = Env2();
