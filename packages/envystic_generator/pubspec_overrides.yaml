@@ -1,0 +1,3 @@
+dependency_overrides:
+  envystic: 
+    path: ../envystic

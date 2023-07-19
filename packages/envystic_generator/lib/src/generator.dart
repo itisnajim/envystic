@@ -118,22 +118,27 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
     final jsonString = jsonEncode(Map.fromEntries(entries));
     final encodedJson = base64.encode(jsonString.codeUnits);
 
-    String encodedEntries;
-    if (encodedJson.contains("'")) {
-      encodedEntries = 'static const String _encodedEntries = "$encodedJson";';
-    } else {
-      encodedEntries = "static const String _encodedEntries = '$encodedJson';";
-    }
-
     final buffer = StringBuffer();
 
     buffer.writeln("""
-      class _\$$className extends $className {
-        const _\$$className() : super.${constructor.name}();
+      const String${encryptionKey == null ? '?' : ''} _encryptionKey = ${encryptionKey == null ? null : escapeDartString(encryptionKey)};
+      const String _encodedEntries = ${escapeDartString(encodedJson)};
 
-        static const String${encryptionKey == null ? '?' : ''} _encryptionKey = ${encryptionKey == null ? null : '"$encryptionKey"'};
-        $encodedEntries
+      class _\$$className extends $className implements EnvysticInterface{
+        const _\$$className() : super.${constructor.name}();
+        @override
+        String get pairKeyEncodedEntries\$ =>${encryptionKey == null ? '' : '_encryptionKey +'} _encodedEntries;
+
         ${fieldsValues.join('\n')}
+
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is EnvysticInterface &&
+                pairKeyEncodedEntries\$ == other.pairKeyEncodedEntries\$;
+
+        @override
+        int get hashCode => pairKeyEncodedEntries\$.hashCode;
 
       }""");
 
