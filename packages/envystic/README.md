@@ -46,7 +46,7 @@ abstract class Env {
 
   const Env._();
 
-  @envysticField // Default key name assigned: 'KEY1'
+  @envysticField
   String get key1;
 
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
@@ -68,7 +68,7 @@ This will generate the necessary code based on the annotations in your codebase.
 
 ```dart
 void main() {
-  final env = Env(); // Provide an encryption key (optional)
+  final env = Env();
   // Access environment variables
   print(env.key1); 
   print(env.key2);
@@ -81,7 +81,7 @@ The `Envystic` annotation supports the following optional parameters:
 
 * `path`: The path to the environment variables file. By default, it is set to `.env`'.
 * `encryptionKey`: If provided, this encryption key will be used to obfuscate / encrypt the values. If not provided, a `base64` encoding is applied to the values for a simple level of protection.
-* `keyFormat`: Specifies the format of key names in the environment file (e.g., .env). Defaults to [KeyFormat.screamingSnake].
+* `keyFormat`: Specifies the format of key names in the environment file (e.g., .env). Defaults to [KeyFormat.none].
 
 
 ## Example
@@ -98,7 +98,7 @@ abstract class Env {
 
   const Env._();
 
-  @envysticField // Default key name assigned: 'KEY1'
+  @envysticField
   String get key1;
 
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
