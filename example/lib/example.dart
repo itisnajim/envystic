@@ -1,20 +1,36 @@
-import 'env.dart';
-import 'env2.dart';
+import 'package:example/env1.dart';
+
+import 'env_all.dart';
 
 void main() {
-  const env = Env();
-  print('env.key1 ${env.key1}');
-  print('env.key2 ${env.key2}');
-  print('env.specialKey ${env.specialKey}');
-  print('env.drink ${env.drink}');
+  final env1 = Env1();
+  print('env1.key1 ${env1.key1}');
+  print('env1.key2 ${env1.key2}');
+  print('env1.isKeyExists("FOO") ${env1.isKeyExists('FOO')}');
+  print('env1.tryGet("FOO") ${env1.tryGet('FOO')}');
+  print('env1.isKeyExists("BAR") ${env1.isKeyExists('BAR')}');
+  print('env1.tryGet("BAR") ${env1.tryGet('BAR')}');
+  print('env1.specialKey ${env1.specialKey}');
+  print('env1.drink ${env1.drink}');
 
-  const env2 = Env2();
+  print('\n');
+
+  final envAll = EnvAll();
   print(
-      'env2.testString ${env2.testString}, type: ${env2.testString.runtimeType}');
-  print('env2.testInt ${env2.testInt}, type: ${env2.testInt.runtimeType}');
+      'envAll.specialKey ${envAll.specialKey}, type: ${envAll.specialKey.runtimeType}');
+  print('envAll.key1 ${envAll.key1}, type: ${envAll.key1.runtimeType}');
+  print('envAll.foo ${envAll.foo}, type: ${envAll.foo.runtimeType}');
   print(
-      'env2.testDouble ${env2.testDouble}, type: ${env2.testDouble.runtimeType}');
-  print('env2.testBool ${env2.testBool}, type: ${env2.testBool.runtimeType}');
+      'envAll.testString ${envAll.testString}, type: ${envAll.testString.runtimeType}');
   print(
-      'env2.testDynamic ${env2.testDynamic}, type: ${env2.testDynamic.runtimeType}');
+      'envAll.testString2 ${envAll.testString2}, type: ${envAll.testString2.runtimeType}');
+  print(
+      'envAll.testInt ${envAll.testInt}, type: ${envAll.testInt.runtimeType}');
+  print(
+      'envAll.testDouble ${envAll.testDouble}, type: ${envAll.testDouble.runtimeType}');
+  print(
+      'envAll.testBool ${envAll.testBool}, type: ${envAll.testBool.runtimeType}');
+  print(
+      'envAll.testDynamic ${envAll.testDynamic}, type: ${envAll.testDynamic.runtimeType}');
+  print('envAll.drink ${envAll.drink}');
 }

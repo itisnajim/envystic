@@ -1,6 +1,6 @@
 name: envystic_generator
 description: Code generator for Envystic package - Simplifies Dart/Flutter env var management. Secure & organized.
-version: 0.1.0
+version: 0.2.0+1
 repository: https://github.com/itisnajim/envystic
 issue_tracker: https://github.com/itisnajim/envystic/issues
 
@@ -8,7 +8,7 @@ environment:
   sdk: ^3.0.5
 
 dependencies:
-  envystic: ^0.1.0
+  envystic: ^0.2.0+1
   build: ^2.4.1
   logging: ^1.2.0
   analyzer: ^6.0.0

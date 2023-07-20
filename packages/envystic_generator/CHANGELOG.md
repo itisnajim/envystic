@@ -1,3 +1,15 @@
+## 0.2.0
+
+#### Annotations
+- Introducing `EnvysticAll` Annotation: With this annotation, you can now automatically load all fields from the environment file (e.g., .env file) without the need to specify them individually using getters.
+
+#### Methods
+- `T get<T>(String envKey)`: Method to retrieve the value associated with a given `envKey` from the loaded environment entries. Throws an exception if the key `envKey` does not exist or the value cannot be cast to the specified type `T`.
+- `T? tryGet<T>(String envKey)`: Method is a safe way to retrieve the value associated with a given `envKey` from the loaded environment entries. It returns `null` if the key does not exist or the value cannot be cast to the specified type T, preventing exceptions.
+- `T getForField<T>(String fieldName)`: Method to retrieve the value associated with a specific fieldName from the loaded environment entries.
+- `bool isKeyExists(String envKey)`: Method to check if the provided `envKey` exists in the loaded environment keys. It returns true if the key exists and false otherwise.
+- `String? getFieldName(String envKey)`: Method to get the field name associated with the provided `envKey`. If the `envKey` exists, it returns the corresponding field name; otherwise, it returns `null`.
+
 ## 0.1.0
 
 - Introduced `EnvysticInterface`, an interface that provides a contract for generated classes. The generated class implements this interface, ensuring support for equality comparison using == and hash code computation.

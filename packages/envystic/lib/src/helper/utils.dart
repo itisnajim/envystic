@@ -92,3 +92,39 @@ T getEntryValue<T>(
   final decryptedValue = decodeValue(encryptedValue, encryptionKey);
   return _parseValue(decryptedValue);
 }
+
+/// **Ignore This Method** Used by the package
+String? getFieldNameForKey(
+  String envKey,
+  String encodedKeysFields,
+) {
+  final bytes = base64.decode(encodedKeysFields);
+  final stringDecoded = String.fromCharCodes(bytes);
+  final jsonMap = json.decode(stringDecoded) as Map;
+  return jsonMap[envKey];
+}
+
+/// **Ignore This Method** Used by the package
+String? getKeyForFieldName(
+  String fieldName,
+  String encodedKeysFields,
+) {
+  final bytes = base64.decode(encodedKeysFields);
+  final stringDecoded = String.fromCharCodes(bytes);
+  final jsonMap = json.decode(stringDecoded) as Map;
+  return jsonMap.entries
+      .where((entry) => entry.value == fieldName)
+      .firstOrNull
+      ?.key;
+}
+
+/// **Ignore This Method** Used by the package
+bool isEnvKeyExists(
+  String envKey,
+  String encodedKeysFields,
+) {
+  final bytes = base64.decode(encodedKeysFields);
+  final stringDecoded = String.fromCharCodes(bytes);
+  final jsonMap = json.decode(stringDecoded) as Map;
+  return jsonMap.containsKey(envKey);
+}

@@ -41,14 +41,14 @@ import 'package:envystic/envystic.dart';
 part 'env.g.dart';
 
 @envystic
-abstract class Env {
-  const factory Env() = _$Env;
+class Env with _$Env {
+  const Env();
 
-  const Env._();
-
+  @override
   @envysticField
   String get key1;
 
+  @override
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
   int? get key2;
 
@@ -93,14 +93,14 @@ import 'package:envystic/envystic.dart';
 part 'env.g.dart';
 
 @envystic
-abstract class Env {
-  const factory Env() = _$Env;
+class Env with _$Env {
+  const Env();
 
-  const Env._();
-
+  @override
   @envysticField
   String get key1;
 
+  @override
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
   int? get key2;
 
@@ -117,6 +117,87 @@ void main() {
   print(env.drink); // "Coffee"
 }
 ```
+
+## EnvysticAll Annotation
+The `EnvysticAll` annotation provides an automatic way to load all keys from the environment file without the need to specify them individually using getters.
+
+#### Example:
+```dart
+import 'package:envystic/envystic.dart';
+
+part 'env_all.g.dart';
+
+@EnvysticAll(path: '.env.example', encryptionKey: 'EncryptMorePlease')
+class EnvAll with _$EnvAll {
+  EnvAll();
+
+  @override
+  @EnvysticField(
+      name:
+          'MY_SPECIAL_KEY') // This will be pulled from System environment variables if not exists in .env.example
+  int? get specialKey;
+}
+
+void main() {
+  final envAll = EnvAll();
+  // Access all loaded environment variables
+  print(envAll.specialKey); 
+  print(envAll.key1);
+  print(envAll.key2);
+  print(envAll.foo);
+  print(envAll.bar);
+  ...
+}
+```
+
+It is recommended to use the `@Envystic` annotation instead of `@EnvysticAll`. Using `@Envystic` allows you to specify only the fields needed, reducing class overload and ensuring better maintainability.
+
+## Methods
+
+#### `T get<T>(String envKey)`
+
+Retrieves the value associated with the given envKey from the loaded environment entries.
+The type of the returned value is inferred based on the actual field type.
+
+Example:
+
+```dart
+final myValue = env.get<int>('MY_SPECIAL_KEY');
+```
+
+In this example, `MY_SPECIAL_KEY` is retrieved from the loaded environment entries as specified: `integer`.
+If the key does not exist or the value cannot be cast to the specified type, this method will throw an exception.
+
+#### `T? tryGet<T>(String envKey)`
+
+Tries to retrieve the value associated with the given envKey from the loaded environment entries.
+If the key does not exist or the value cannot be cast to the specified type,
+this method will return `null` instead of throwing an exception.
+
+#### `T getForField<T>(String fieldName)`
+
+Retrieves the value associated with the given `fieldName` from the loaded environment entries.
+The type of the returned value is inferred based on the specified generic type `T`.
+
+Throws an exception if the `fieldName` does not exist in the loaded environment entries
+or if the value cannot be cast to the specified type `T`.
+
+Example:
+
+```dart
+final myValue = env.getForField<int>('specialKey');
+```
+
+#### `bool isKeyExists(String envKey)`
+
+Checks if the provided envKey exists in the loaded environment keys.
+Returns true if the key exists, false otherwise.
+
+#### `String? getFieldName(String envKey)`
+
+Gets the field name associated with the provided `envKey`.
+If the `envKey` exists, returns the corresponding field name; otherwise, returns `null`.
+
 
 ## Author
 

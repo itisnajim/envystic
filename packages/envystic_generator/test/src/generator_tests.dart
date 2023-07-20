@@ -5,25 +5,15 @@ import 'package:source_gen_test/annotations.dart';
 @Envystic()
 const foo = 'bar';
 
-@ShouldThrow(
-  "@Envystic annotation requires a const Env0._() or private constructor",
-)
-@Envystic()
-abstract class Env0 {}
-
 @ShouldThrow("Environment variable file doesn't exist at `.env`.")
 @Envystic()
-abstract class Env1 {
-  const Env1._();
-}
+abstract class Env1 {}
 
 @ShouldThrow('Environment variable not found for field `foo`.')
 @Envystic(path: 'test/.env.example')
 abstract class Env2 {
-  const Env2._();
-
-  @EnvysticField()
-  String get foo;
+  @envysticField
+  int get foo;
 }
 
 @ShouldThrow(
@@ -31,79 +21,94 @@ abstract class Env2 {
 )
 @Envystic(path: 'test/.env.example')
 abstract class Env3 {
-  const Env3._();
-
-  @EnvysticField()
+  @envysticField
   Symbol? get testString;
 }
 
 @ShouldThrow('Type `int` does not align with value `testString`.')
 @Envystic(path: 'test/.env.example')
 abstract class Env4 {
-  const Env4._();
-
-  @EnvysticField()
+  @envysticField
   int get testString;
 }
 
 @ShouldThrow('Type `double` does not align with value `testString`.')
 @Envystic(path: 'test/.env.example')
 abstract class Env5 {
-  const Env5._();
-
-  @EnvysticField()
+  @envysticField
   double get testString;
 }
 
 @ShouldThrow('Type `num` does not align with value `testString`.')
 @Envystic(path: 'test/.env.example')
 abstract class Env6 {
-  const Env6._();
-
-  @EnvysticField()
+  @envysticField
   num get testString;
 }
 
 @ShouldThrow('Type `bool` does not align with value `testString`.')
 @Envystic(path: 'test/.env.example')
 abstract class Env7 {
-  const Env7._();
-
-  @EnvysticField()
+  @envysticField
   bool get testString;
 }
 
 @ShouldGenerate('''
-class _\$Env8 extends Env8 {
-  const _\$Env8() : super._();
+const String? _encryptionKey = null;
+const String _encodedEntries =
+    'eyJ0ZXN0U3RyaW5nIjoiZEdWemRGTjBjbWx1Wnc9PSIsInRlc3RJbnQiOiJNVEl6IiwidGVzdERvdWJsZSI6Ik1TNHlNdz09IiwidGVzdEJvb2wiOiJkSEoxWlE9PSIsInRlc3REeW5hbWljIjoiTVRJellXSmoifQ==';
+const String _encodedKeysFields =
+    'eyJ0ZXN0U3RyaW5nIjoidGVzdFN0cmluZyIsInRlc3RJbnQiOiJ0ZXN0SW50IiwidGVzdERvdWJsZSI6InRlc3REb3VibGUiLCJ0ZXN0Qm9vbCI6InRlc3RCb29sIiwidGVzdER5bmFtaWMiOiJ0ZXN0RHluYW1pYyJ9';
 
-  static const String? _encryptionKey = null;
-  static const String _encodedEntries =
-      'eyJ0ZXN0U3RyaW5nIjoiZEdWemRGTjBjbWx1Wnc9PSIsInRlc3RJbnQiOiJNVEl6IiwidGVzdERvdWJsZSI6Ik1TNHlNdz09IiwidGVzdEJvb2wiOiJkSEoxWlE9PSIsInRlc3REeW5hbWljIjoiTVRJellXSmoifQ==';
+mixin _\$Env8 implements EnvysticInterface {
   @override
-  String? get testString =>
-      getEntryValue('testString', _encodedEntries, _encryptionKey);
+  String get pairKeyEncodedEntries\$ => _encodedEntries;
+
+  String? get testString => getForField('testString');
+
+  int? get testInt => getForField('testInt');
+
+  double? get testDouble => getForField('testDouble');
+
+  bool? get testBool => getForField('testBool');
+
+  dynamic get testDynamic => getForField('testDynamic');
 
   @override
-  int? get testInt => getEntryValue('testInt', _encodedEntries, _encryptionKey);
+  T getForField<T>(String fieldName) =>
+      getEntryValue(fieldName, _encodedEntries, _encryptionKey);
 
   @override
-  double? get testDouble =>
-      getEntryValue('testDouble', _encodedEntries, _encryptionKey);
+  bool isKeyExists(String envKey) => isEnvKeyExists(envKey, _encodedKeysFields);
 
   @override
-  bool? get testBool =>
-      getEntryValue('testBool', _encodedEntries, _encryptionKey);
+  String? getFieldName(String envKey) =>
+      getFieldNameForKey(envKey, _encodedKeysFields);
 
   @override
-  dynamic get testDynamic =>
-      getEntryValue('testDynamic', _encodedEntries, _encryptionKey);
+  T get<T>(String envKey) => getForField(getFieldName(envKey)!);
+
+  @override
+  T? tryGet<T>(String envKey) {
+    try {
+      return !isKeyExists(envKey) ? null : getForField(getFieldName(envKey)!);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EnvysticInterface &&
+          pairKeyEncodedEntries\$ == other.pairKeyEncodedEntries\$;
+
+  @override
+  int get hashCode => pairKeyEncodedEntries\$.hashCode;
 }
 ''')
 @Envystic(path: 'test/.env.example')
 abstract class Env8 {
-  const Env8._();
-
   @EnvysticField()
   String? get testString;
   @EnvysticField()

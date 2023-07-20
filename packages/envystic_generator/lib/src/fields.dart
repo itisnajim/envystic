@@ -2,38 +2,39 @@ import 'dart:io';
 
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
-import 'package:analyzer/dart/element/type.dart';
 import 'package:envystic/envystic.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:source_helper/source_helper.dart';
 
 abstract class Field<T> {
   const Field(
-    this._element,
-    this.fieldKey,
+    this.name,
+    this.type,
+    this.isNullable,
     this.envKey,
     this.value,
+    this.typePrefix,
   );
 
   static Field<dynamic> of({
-    required FieldElement element,
+    required Element element,
+    required String name,
+    required Type type,
+    required bool isNullable,
     required KeyFormat keyFormat,
-    required String? nameOverride,
+    String? nameOverride,
     DartObject? defaultValue,
     Map<String, String>? values,
+    String? typePrefix,
   }) {
-    final type = element.type;
-    final fieldKey = element.name;
-    final envKey = getEnvKey(fieldKey, keyFormat, nameOverride);
+    final envKey = getEnvKey(name, keyFormat, nameOverride);
     final value = values?[envKey] ??
         Platform.environment[envKey] ??
         defaultValue?.toStringValue();
-    final nullable = type.isNullableType;
 
-    if (value == null && !nullable && !type.isLikeDynamic) {
+    if (value == null && !isNullable && !(type == dynamic || type == Object)) {
       throw InvalidGenerationSourceError(
-        "Environment variable not found for field `$fieldKey`.",
+        "Environment variable not found for field `$name`.",
         element: element,
       );
     }
@@ -43,32 +44,35 @@ abstract class Field<T> {
           element: element,
         );
 
-    if (value == null && !nullable && (values ?? {}).containsKey(envKey)) {
+    if (value == null && !isNullable && (values ?? {}).containsKey(envKey)) {
       throwInvalid();
     }
 
-    if (type.isDartCoreString) {
-      if (!nullable && value == null) throwInvalid();
-      return StringField(element, fieldKey, envKey, value);
-    } else if (type.isDartCoreInt) {
-      if (!nullable && int.tryParse(value ?? 'null') == null) throwInvalid();
-      return IntField(element, fieldKey, envKey, value);
-    } else if (type.isDartCoreNum) {
-      if (!nullable && num.tryParse(value ?? 'null') == null) throwInvalid();
-      return NumField(element, fieldKey, envKey, value);
-    } else if (type.isDartCoreDouble) {
-      if (!nullable && double.tryParse(value ?? 'null') == null) throwInvalid();
-      return DoubleField(element, fieldKey, envKey, value);
-    } else if (type.isDartCoreBool) {
-      if (!nullable && bool.tryParse(value ?? 'null') == null) throwInvalid();
-      return BoolField(element, fieldKey, envKey, value);
-    } else if (type.isLikeDynamic) {
-      return LikeDynamicField(element, fieldKey, envKey, value);
+    if (type == String) {
+      if (!isNullable && value == null) throwInvalid();
+      return StringField(name, type, isNullable, envKey, value, typePrefix);
+    } else if (type == int) {
+      if (!isNullable && int.tryParse(value ?? 'null') == null) throwInvalid();
+      return IntField(name, type, isNullable, envKey, value, typePrefix);
+    } else if (type == num) {
+      if (!isNullable && num.tryParse(value ?? 'null') == null) throwInvalid();
+      return NumField(name, type, isNullable, envKey, value, typePrefix);
+    } else if (type == double) {
+      if (!isNullable && double.tryParse(value ?? 'null') == null) {
+        throwInvalid();
+      }
+      return DoubleField(name, type, isNullable, envKey, value, typePrefix);
+    } else if (type == bool) {
+      if (!isNullable && bool.tryParse(value ?? 'null') == null) throwInvalid();
+      return BoolField(name, type, isNullable, envKey, value, typePrefix);
+    } else if (type == dynamic) {
+      return LikeDynamicField(
+          name, type, isNullable, envKey, value, typePrefix);
     }
-    /*else if (type.isEnum) {
-      final name = defaultValue?.getField('_name')?.toStringValue();
-      return EnumField(element, fieldKey, envKey, value ?? name);
-    }*/
+    /*else if (type is EnumType) {
+    final name = defaultValue?.getField('_name')?.toStringValue();
+    return EnumField(element, fieldKey, envKey, value ?? name);
+  }*/
 
     throw InvalidGenerationSourceError(
       "Type `$type` not supported",
@@ -106,28 +110,16 @@ abstract class Field<T> {
     return envKey;
   }
 
-  final FieldElement _element;
-  final String fieldKey;
+  final String name;
+  final Type type;
+  final bool isNullable;
   final String envKey;
   final String? value;
-
-  DartType get type => _element.type;
-
-  String? get typePrefix {
-    final identifier = type.element?.library?.identifier;
-    if (identifier == null) return null;
-
-    for (final e in _element.library.libraryImports) {
-      if (e.importedLibrary?.identifier != identifier) continue;
-      return e.prefix?.element.name;
-    }
-    return null;
-  }
+  final String? typePrefix;
 
   String typeWithPrefix({required bool withNullability}) {
     final typePrefix = this.typePrefix;
-    final type = this.type.getDisplayString(withNullability: withNullability);
-    return '${typePrefix != null ? '$typePrefix.' : ''}$type';
+    return '${typePrefix != null ? '$typePrefix.' : ''}$type${isNullable ? '?' : ''}';
   }
 
   T? parseValue();
@@ -136,19 +128,14 @@ abstract class Field<T> {
 
   String generate() {
     return """
-      @override
-      ${typeWithPrefix(withNullability: true)} get ${_element.name} => getEntryValue('$fieldKey', _encodedEntries, _encryptionKey);
+      ${typeWithPrefix(withNullability: true)} get $name => getForField('$name');
     """;
   }
 }
 
 class StringField extends Field<String> {
-  const StringField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  StringField(super.name, super.type, super.isNullable, super.envKey,
+      super.value, super.typePrefix);
 
   @override
   String? parseValue() => value;
@@ -160,12 +147,8 @@ class StringField extends Field<String> {
 }
 
 class NumField extends Field<num> {
-  const NumField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  NumField(super.name, super.type, super.isNullable, super.envKey, super.value,
+      super.typePrefix);
 
   @override
   num? parseValue() {
@@ -175,12 +158,8 @@ class NumField extends Field<num> {
 }
 
 class IntField extends Field<int> {
-  const IntField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  IntField(super.name, super.type, super.isNullable, super.envKey, super.value,
+      super.typePrefix);
 
   @override
   int? parseValue() {
@@ -190,12 +169,8 @@ class IntField extends Field<int> {
 }
 
 class DoubleField extends Field<double> {
-  const DoubleField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  DoubleField(super.name, super.type, super.isNullable, super.envKey,
+      super.value, super.typePrefix);
 
   @override
   double? parseValue() {
@@ -205,12 +180,8 @@ class DoubleField extends Field<double> {
 }
 
 class BoolField extends Field<bool> {
-  const BoolField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  BoolField(super.name, super.type, super.isNullable, super.envKey, super.value,
+      super.typePrefix);
 
   @override
   bool? parseValue() {
@@ -233,30 +204,23 @@ class BoolField extends Field<bool> {
 }
 
 class LikeDynamicField extends Field {
-  LikeDynamicField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  LikeDynamicField(super.name, super.type, super.isNullable, super.envKey,
+      super.value, super.typePrefix);
 
   @override
   parseValue() => value;
 }
 
 class EnumField extends Field<String> {
-  const EnumField(
-    super.element,
-    super.fieldKey,
-    super.envKey,
-    super.value,
-  );
+  EnumField(super.name, super.type, super.isNullable, super.envKey, super.value,
+      super.typePrefix);
 
   @override
   String? parseValue() {
-    if (value == null) return null;
+    //if (value == null)
+    return null;
 
-    final values = (type as InterfaceType)
+    /*final values = (type as InterfaceType)
         .accessors
         .where((e) => e.returnType.isAssignableTo(type))
         .map((e) => e.name);
@@ -264,24 +228,18 @@ class EnumField extends Field<String> {
       throw Exception('Invalid enum value for $type: $value');
     }
 
-    return values.firstWhere((e) => e == value!.split('.').last);
+    return values.firstWhere((e) => e == value!.split('.').last);*/
   }
 
   @override
   String generate() {
-    final value = parseValue();
+    /*final value = parseValue();
     bool nullable = type.nullabilitySuffix != NullabilitySuffix.none;
     if (value == null && !nullable) {
-      throw Exception('generate: No environment variable found for: $fieldKey');
-    }
+      throw Exception('generate: No environment variable found for: $name');
+    }*/
 
-    return """
-      @override
-      ${typeWithPrefix(withNullability: true)} get ${_element.name} => _get(
-        '$fieldKey',
-        fromString: ${typeWithPrefix(withNullability: false)}.values.byName,
-      );
-    """;
+    return "";
   }
 
   @override

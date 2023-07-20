@@ -7,7 +7,7 @@ class EnvironmentField {
   final DartType type;
   final DartObject? defaultValue;
 
-  EnvironmentField(
+  const EnvironmentField(
     this.name,
     this.nameOverride,
     this.type,
