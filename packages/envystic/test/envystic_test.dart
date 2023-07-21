@@ -6,18 +6,12 @@ void main() {
     test('Empty constructor', () {
       final envystic = Envystic();
       expect(envystic.path, '.env');
-      expect(envystic.encryptionKey, null);
+      expect(envystic.keyFormat, null);
     });
 
     test('Specified path', () {
       final envystic = Envystic(path: '.env.test');
       expect(envystic.path, '.env.test');
-    });
-
-    test('Specified encryptionKey', () {
-      final encryptionKey = 'ThisIsAPassword';
-      final envystic = Envystic(encryptionKey: encryptionKey);
-      expect(envystic.encryptionKey, encryptionKey);
     });
 
     test('Specified keyFormat', () {

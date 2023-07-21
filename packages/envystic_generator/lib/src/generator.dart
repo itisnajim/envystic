@@ -3,8 +3,7 @@ import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
-import 'package:envystic_generator/src/re_case.dart';
-import 'package:envystic_generator/src/types.dart';
+
 import 'package:logging/logging.dart';
 import 'package:build/build.dart';
 import 'package:envystic/envystic.dart';
@@ -14,6 +13,9 @@ import 'package:source_helper/source_helper.dart';
 import 'fields.dart';
 import 'helpers.dart';
 import 'load_envs.dart';
+import 'types.dart';
+import 're_case.dart';
+import 'encryption_key_file.dart';
 
 final logger = Logger('EnvysticGenerator:');
 
@@ -22,9 +24,31 @@ final logger = Logger('EnvysticGenerator:');
 /// Will throw an [InvalidGenerationSourceError] if the annotated
 /// element is not a [classElement].
 class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
-  const EnvysticGenerator({this.options});
+  String? encryptionKey;
+  EnvysticGenerator({
+    this.options,
+  }) : encryptionKey = EncryptionKeyFile(options.encryptionKeyOutput).read();
 
   final BuilderOptions? options;
+
+  @override
+  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) {
+    if (options.generateEncryption && encryptionKey == null) {
+      encryptionKey = generateRandomEncryptionKey(16);
+    }
+
+    final result = super.generate(library, buildStep);
+
+    if (encryptionKey != null) {
+      Future.value(result).then((_) {
+        return EncryptionKeyFile(options.encryptionKeyOutput)
+            .write(encryptionKey!);
+      }).onError(
+          (error, stackTrace) => throw error ?? "Unknown error ocurred.");
+    }
+
+    return result;
+  }
 
   @override
   FutureOr<String> generateForAnnotatedElement(
@@ -44,9 +68,6 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
     final className = element.name;
 
     final envPath = annotation.read('path').stringValue;
-    final encryptionKey = annotation.read('encryptionKey').isNull
-        ? null
-        : base64.encode(annotation.read('encryptionKey').stringValue.codeUnits);
     final keyFormatStr = annotation.read('keyFormat').isNull
         ? options?.config['key_format'] as String?
         : annotation.read('keyFormat').revive().accessor.split('.').last;
@@ -152,50 +173,36 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
     final buffer = StringBuffer();
 
     buffer.writeln("""
-      const String${encryptionKey == null ? '?' : ''} _encryptionKey = ${encryptionKey == null ? null : escapeDartString(encryptionKey)};
       const String _encodedEntries = ${escapeDartString(encodedJson)};
       const String _encodedKeysFields = ${escapeDartString(encodedKeysFieldsJson)};
 
-      mixin _\$$className implements EnvysticInterface {
+      class _\$$className extends EnvysticInterface {
+        const _\$$className({super.encryptionKey});
 
         @override
-        String get pairKeyEncodedEntries\$ =>${encryptionKey == null ? '' : '_encryptionKey +'} _encodedEntries;
+        String get encodedEntries => _encodedEntries;
+        @override
+        String get encodedKeysFields => _encodedKeysFields;
 
         ${fieldsValues.join('\n')}
 
-        @override
-        T getForField<T>(String fieldName) =>
-            getEntryValue(fieldName, _encodedEntries, _encryptionKey);
-
-        @override
-        bool isKeyExists(String envKey) => isEnvKeyExists(envKey, _encodedKeysFields);
-
-        @override
-        String? getFieldName(String envKey) =>
-            getFieldNameForKey(envKey, _encodedKeysFields);
-
-        @override
-        T get<T>(String envKey) => getForField(getFieldName(envKey)!);
-
-        @override
-        T? tryGet<T>(String envKey) {
-          try {
-            return !isKeyExists(envKey) ? null : getForField(getFieldName(envKey)!);
-          } catch (e) {
-            return null;
-          }
-        }
-
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is EnvysticInterface &&
-                pairKeyEncodedEntries\$ == other.pairKeyEncodedEntries\$;
-
-        @override
-        int get hashCode => pairKeyEncodedEntries\$.hashCode;
       }""");
 
     return buffer.toString();
   }
+}
+
+/// Extension for [BuilderOptions] to add custom getters.
+extension BuilderOptionsExtension on BuilderOptions? {
+  /// Returns the value of the 'encryption_key_output' configuration as a String,
+  /// or null if it's not available or not a String.
+  String get encryptionKeyOutput =>
+      this?.config['encryption_key_output'] as String? ??
+      EncryptionKeyFile.defaultPath;
+
+  /// Parses the 'generate_encryption' configuration value as a boolean.
+  /// If the value is not a valid boolean representation, it defaults to false.
+  bool get generateEncryption =>
+      bool.tryParse(this?.config['generate_encryption'].toString() ?? '') ??
+      false;
 }

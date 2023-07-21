@@ -54,15 +54,18 @@ abstract class Env7 {
 }
 
 @ShouldGenerate('''
-const String? _encryptionKey = null;
 const String _encodedEntries =
     'eyJ0ZXN0U3RyaW5nIjoiZEdWemRGTjBjbWx1Wnc9PSIsInRlc3RJbnQiOiJNVEl6IiwidGVzdERvdWJsZSI6Ik1TNHlNdz09IiwidGVzdEJvb2wiOiJkSEoxWlE9PSIsInRlc3REeW5hbWljIjoiTVRJellXSmoifQ==';
 const String _encodedKeysFields =
     'eyJ0ZXN0U3RyaW5nIjoidGVzdFN0cmluZyIsInRlc3RJbnQiOiJ0ZXN0SW50IiwidGVzdERvdWJsZSI6InRlc3REb3VibGUiLCJ0ZXN0Qm9vbCI6InRlc3RCb29sIiwidGVzdER5bmFtaWMiOiJ0ZXN0RHluYW1pYyJ9';
 
-mixin _\$Env8 implements EnvysticInterface {
+class _\$Env8 extends EnvysticInterface {
+  const _\$Env8({super.encryptionKey});
+
   @override
-  String get pairKeyEncodedEntries\$ => _encodedEntries;
+  String get encodedEntries => _encodedEntries;
+  @override
+  String get encodedKeysFields => _encodedKeysFields;
 
   String? get testString => getForField('testString');
 
@@ -73,38 +76,6 @@ mixin _\$Env8 implements EnvysticInterface {
   bool? get testBool => getForField('testBool');
 
   dynamic get testDynamic => getForField('testDynamic');
-
-  @override
-  T getForField<T>(String fieldName) =>
-      getEntryValue(fieldName, _encodedEntries, _encryptionKey);
-
-  @override
-  bool isKeyExists(String envKey) => isEnvKeyExists(envKey, _encodedKeysFields);
-
-  @override
-  String? getFieldName(String envKey) =>
-      getFieldNameForKey(envKey, _encodedKeysFields);
-
-  @override
-  T get<T>(String envKey) => getForField(getFieldName(envKey)!);
-
-  @override
-  T? tryGet<T>(String envKey) {
-    try {
-      return !isKeyExists(envKey) ? null : getForField(getFieldName(envKey)!);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EnvysticInterface &&
-          pairKeyEncodedEntries\$ == other.pairKeyEncodedEntries\$;
-
-  @override
-  int get hashCode => pairKeyEncodedEntries\$.hashCode;
 }
 ''')
 @Envystic(path: 'test/.env.example')

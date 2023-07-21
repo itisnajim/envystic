@@ -17,7 +17,7 @@ class EnvysticAll extends Envystic {
   /// Defaults to [KeyFormat.none].
   const EnvysticAll({
     super.path,
-    super.encryptionKey,
+    //super.encryptionKey,
     super.keyFormat,
   });
 }

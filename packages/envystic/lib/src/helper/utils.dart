@@ -54,8 +54,7 @@ String? encodeValue(String? value, String? encryptionKey) {
   if (value == null) return null;
 
   final encryptedBytes = encryptionKey != null
-      ? Encrypter(String.fromCharCodes(base64.decode(encryptionKey)))
-          .encrypt(value)
+      ? Encrypter(encryptionKey).encrypt(value)
       : value.codeUnits;
 
   return base64.encode(encryptedBytes);
@@ -67,9 +66,7 @@ String? decodeValue(String? encodedValue, String? encryptionKey) {
 
   final decodedBytes = base64.decode(encodedValue);
   final decryptedBytes = encryptionKey != null
-      ? utf8.encode(
-          Encrypter(String.fromCharCodes(base64.decode(encryptionKey)))
-              .decrypt(decodedBytes))
+      ? Encrypter(encryptionKey).decrypt(decodedBytes).codeUnits
       : decodedBytes;
 
   return String.fromCharCodes(decryptedBytes);
@@ -89,7 +86,16 @@ T getEntryValue<T>(
     throw Exception('Key $key not found in .env file');
   }
   final encryptedValue = jsonMap[key] as String?;
-  final decryptedValue = decodeValue(encryptedValue, encryptionKey);
+  String? decryptedValue;
+  try {
+    decryptedValue = decodeValue(encryptedValue, encryptionKey);
+  } catch (e) {
+    throw ArgumentError.value(
+      encryptionKey,
+      "encryptionKey",
+      "Invalid encryption key, $e",
+    );
+  }
   return _parseValue(decryptedValue);
 }
 

@@ -3,7 +3,10 @@ import 'package:example/env1.dart';
 import 'env_all.dart';
 
 void main() {
-  final env1 = Env1();
+  final start = DateTime.now();
+  const encryptionKey = 'Y2lVNEVLa3loZWVFZkJvMA==';
+
+  const env1 = Env1(encryptionKey: encryptionKey);
   print('env1.key1 ${env1.key1}');
   print('env1.key2 ${env1.key2}');
   print('env1.isKeyExists("FOO") ${env1.isKeyExists('FOO')}');
@@ -15,7 +18,7 @@ void main() {
 
   print('\n');
 
-  final envAll = EnvAll();
+  const envAll = EnvAll(encryptionKey: encryptionKey);
   print(
       'envAll.specialKey ${envAll.specialKey}, type: ${envAll.specialKey.runtimeType}');
   print('envAll.key1 ${envAll.key1}, type: ${envAll.key1.runtimeType}');
@@ -33,4 +36,8 @@ void main() {
   print(
       'envAll.testDynamic ${envAll.testDynamic}, type: ${envAll.testDynamic.runtimeType}');
   print('envAll.drink ${envAll.drink}');
+
+  final end = DateTime.now();
+
+  print('total time: ${end.difference(start).inMilliseconds} ms');
 }

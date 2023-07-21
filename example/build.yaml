@@ -3,4 +3,14 @@ targets:
     builders:
       envystic_generator|envystic:
         options:
+          # Choose the desired format for the keys: none, kebab, snake, pascal, or screamingSnake
           key_format: screamingSnake
+          # Determine whether to generate the encryption_key_output if it doesn't already exist
+          # Set this to true to enable generation of the encryption key for dotenv values.
+          generate_encryption: true
+          # `encryption_key_output` File path to use and save the encryption key.
+          # If `generate_encryption` is true and `encryption_key_output` is not set, the default
+          # value 'env_encryption.key' will be used.
+          # Comment out the line below and set generate_encryption to false
+          # to exclude encryption from dotenv values.
+          encryption_key_output: env_encryption_output.key

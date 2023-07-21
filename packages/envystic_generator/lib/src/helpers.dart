@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+
 import 'package:analyzer/dart/element/element.dart';
 
 import 'environment_field.dart';
@@ -110,5 +114,58 @@ String incrementLastInt(String input) {
     return prefix + newInt;
   } else {
     return '${input}2';
+  }
+}
+
+/// Generates a random encryption key of the specified [length].
+/// The encryption key is encoded in Base64 format.
+///
+/// Example usage:
+/// ```dart
+/// int keyLength = 16;
+/// String encryptionKey = generateRandomEncryptionKey(keyLength);
+/// print("Generated Encryption Key: $encryptionKey");
+/// ```
+String generateRandomEncryptionKey(int length) {
+  const String validChars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  final Random secureRandom = Random.secure();
+  final buffer = StringBuffer();
+
+  for (var i = 0; i < length; i++) {
+    buffer.write(validChars[secureRandom.nextInt(validChars.length)]);
+  }
+
+  String key = buffer.toString();
+  List<int> bytes = utf8.encode(key);
+  String base64Key = base64.encode(bytes);
+  return base64Key;
+}
+
+/// Saves the provided [content] to a file at the given [filePath].
+/// If the file already exists, its contents will be overwritten.
+Future<File> saveContentToFile(String content, String filePath) {
+  File file = File(filePath);
+
+  // Create the file if it doesn't exist, and overwrite if it does.
+  return file.writeAsString(content);
+}
+
+/// Saves the provided [content] to a file at the given [filePath] synchronously.
+/// If the file already exists, its contents will be overwritten.
+void saveContentToFileSync(String content, String filePath) {
+  File file = File(filePath);
+
+  // Create the file if it doesn't exist, and overwrite if it does.
+  return file.writeAsStringSync(content);
+}
+
+/// Read file content as String
+String? readFileContentSync(String filePath) {
+  File file = File(filePath);
+  try {
+    return file.readAsStringSync();
+  } catch (e) {
+    return null;
   }
 }

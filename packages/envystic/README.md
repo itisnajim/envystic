@@ -5,15 +5,15 @@
 Envystic is a Dart/Flutter package that simplifies the management of environment variables (dotenv) and provides an extra layer of security. With Envystic, you can effortlessly handle environment variables in your Dart and Flutter projects, ensuring cleaner and more secure code.
 
 ## Features
-1. **Easy Environment Variable Management**: Envystic simplifies the management of environment variables by providing a convenient and structured way to define and access them in your Dart and Flutter projects.
+* **Easy Environment Variable Management**: Envystic simplifies the management of environment variables by providing a convenient and structured way to define and access them in your Dart and Flutter projects.
 
-2. **Secure Variable Storage**: Envystic allows you to provide an optional encryption key to obfuscate or encrypt the values of your environment variables, enhancing the security of sensitive information.
+* **Secure Variable Storage**: Envystic allows you to provide an optional encryption key to encrypt the values of your environment variables, enhancing the security of sensitive information.
 
-3. **Annotation-Based Configuration**: Defining environment variables is straightforward with the use of annotations. The Envystic and EnvysticField annotations help generate the necessary code for accessing your environment variables.
+* **Annotation-Based Configuration**: Defining environment variables is straightforward with the use of annotations. The Envystic and EnvysticField annotations help generate the necessary code for accessing your environment variables.
 
-4. **Custom Key Names**: You can specify custom key names for your environment variables in the .env file, making it easy to reference them in your code.
+* **Custom Key Names**: You can specify custom key names for your environment variables in the .env file, making it easy to reference them in your code.
 
-5. **Flutter and Dart Support**: Envystic is designed to work seamlessly with both Flutter and Dart projects, allowing you to manage environment variables consistently across different types of applications.
+* **Flutter and Dart Support**: Envystic is designed to work seamlessly with both Flutter and Dart projects, allowing you to manage environment variables consistently across different types of applications.
 
 ## Installation
 
@@ -41,8 +41,10 @@ import 'package:envystic/envystic.dart';
 part 'env.g.dart';
 
 @envystic
-class Env with _$Env {
-  const Env();
+class Env extends _$Env {
+  // If no encryption, you can omit `super.encryptionKey`
+  // make it like: `const Env();`
+  const Env({super.encryptionKey});
 
   @override
   @envysticField
@@ -72,6 +74,7 @@ void main() {
   // Access environment variables
   print(env.key1); 
   print(env.key2);
+  print(env.drink); // "Coffee"
 }
 ```
 
@@ -80,43 +83,7 @@ void main() {
 The `Envystic` annotation supports the following optional parameters:
 
 * `path`: The path to the environment variables file. By default, it is set to `.env`'.
-* `encryptionKey`: If provided, this encryption key will be used to obfuscate / encrypt the values. If not provided, a `base64` encoding is applied to the values for a simple level of protection.
 * `keyFormat`: Specifies the format of key names in the environment file (e.g., .env). Defaults to [KeyFormat.none].
-
-
-## Example
-Here's an example of using the Envystic package:
-
-```dart
-import 'package:envystic/envystic.dart';
-
-part 'env.g.dart';
-
-@envystic
-class Env with _$Env {
-  const Env();
-
-  @override
-  @envysticField
-  String get key1;
-
-  @override
-  @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
-  int? get key2;
-
-  // ignored
-  String get drink => 'Coffee';
-}
-
-
-void main() {
-  final env = Env();
-  // Access environment variables
-  print(env.key1); 
-  print(env.key2);
-  print(env.drink); // "Coffee"
-}
-```
 
 ## EnvysticAll Annotation
 The `EnvysticAll` annotation provides an automatic way to load all keys from the environment file without the need to specify them individually using getters.
@@ -127,9 +94,9 @@ import 'package:envystic/envystic.dart';
 
 part 'env_all.g.dart';
 
-@EnvysticAll(path: '.env.example', encryptionKey: 'EncryptMorePlease')
-class EnvAll with _$EnvAll {
-  EnvAll();
+@EnvysticAll(path: '.env.example')
+class EnvAll extends _$EnvAll {
+  const Env({super.encryptionKey});
 
   @override
   @EnvysticField(
@@ -139,7 +106,7 @@ class EnvAll with _$EnvAll {
 }
 
 void main() {
-  final envAll = EnvAll();
+  final envAll = EnvAll(encryptionKey: encryptionKey);
   // Access all loaded environment variables
   print(envAll.specialKey); 
   print(envAll.key1);
@@ -151,6 +118,52 @@ void main() {
 ```
 
 It is recommended to use the `@Envystic` annotation instead of `@EnvysticAll`. Using `@Envystic` allows you to specify only the fields needed, reducing class overload and ensuring better maintainability.
+
+## Encryption
+
+Envystic provides a simple yet effective way to enhance the security of your dotenv values through encryption. By default, if no encryption is applied, Envystic will use base64 encoding to provide a basic level of protection for your sensitive data.
+
+To activate encryption for your dotenv values, you can follow either of these methods:
+
+### Method 1: Via `build.yaml`
+1. Open your `build.yaml` file or create one.
+2. Locate the targets section and look for the $default target.
+3. Under the $default target, find or add the `envystic_generator|envystic` builder and modify the options as follows:
+
+```yaml
+targets:
+  $default:
+    builders:
+      envystic_generator|envystic:
+        options:
+          # Choose the desired format for the keys: none, kebab, snake, pascal, or screamingSnake
+          key_format: screamingSnake
+          # Determine whether to generate the encryption_key_output if it doesn't already exist
+          # Set this to true to enable generation of the encryption key for dotenv values.
+          generate_encryption: true
+          # `encryption_key_output` File path to use and save the encryption key.
+          # If `generate_encryption` is true and `encryption_key_output` is not set, the default
+          # value 'env_encryption.key' will be used.
+          # Comment out the line below and set generate_encryption to false
+          # to exclude encryption from dotenv values.
+          encryption_key_output: env_encryption_output.key
+```
+
+### Method 2: Via Command Line
+1. Open your terminal or command prompt.
+2. Use the following command to build your project while enabling encryption:
+
+```console
+dart run build_runner build --define envystic_generator:envystic=generate_encryption=true --define envystic_generator:envystic=encryption_key_output=env_encryption_output.key
+```
+
+This command will generate the encryption key and store it in the file specified as `encryption_key_output` (in this example, `env_encryption_output.key`).
+
+Alternatively, if you want to use the default output file name (`env_encryption.key`), you can omit the `encryption_key_output` parameter:
+
+```console
+dart run build_runner build --define envystic_generator:envystic=generate_encryption=true
+```
 
 ## Methods
 

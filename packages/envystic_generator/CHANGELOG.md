@@ -1,3 +1,9 @@
+## 0.3.0
+
+- Enhanced Encryption Control: The encryption key is now handled via the constructor of the annotated class, offering more control over the encryption process. You can pass the encryption key as needed during the instantiation of your environment variable class.
+- Automatic Encryption Key Generation: If no encryption key is provided and the `generate_encryption` build flag is set to `true`, running `build_runner` will automatically generate an encryption key to be used in the instantiation of the Envystic annotated class, enabling access to its properties securely.
+
+
 ## 0.2.0
 
 #### Annotations

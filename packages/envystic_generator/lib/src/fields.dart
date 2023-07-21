@@ -31,6 +31,7 @@ abstract class Field<T> {
     final value = values?[envKey] ??
         Platform.environment[envKey] ??
         defaultValue?.toStringValue();
+    // print('envKey $envKey value $value, keyFormat $keyFormat');
 
     if (value == null && !isNullable && !(type == dynamic || type == Object)) {
       throw InvalidGenerationSourceError(

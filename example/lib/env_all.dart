@@ -2,9 +2,9 @@ import 'package:envystic/envystic.dart';
 
 part 'env_all.g.dart';
 
-@EnvysticAll(path: '.env.example', encryptionKey: 'EncryptMorePlease')
-class EnvAll with _$EnvAll {
-  EnvAll();
+@EnvysticAll(path: '.env.example') //, encryptionKey: 'EncryptMorePlease')
+class EnvAll extends _$EnvAll {
+  const EnvAll({super.encryptionKey});
 
   @override
   @EnvysticField(

@@ -1,8 +1,14 @@
 name: envystic
 description: Simplify and Secure Your Environment Variables (dotenv file or system) in Dart/Flutter.
-version: 0.2.0+2
+version: 0.3.0
 repository: https://github.com/itisnajim/envystic
 issue_tracker: https://github.com/itisnajim/envystic/issues
+
+topics:
+  - dotenv
+  - build-runner
+  - codegen
+  - encryption
 
 environment:
   sdk: ^3.0.5

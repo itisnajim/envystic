@@ -1,10 +1,14 @@
-/// An interface defining the contract for Envystic generated classes.
-/// Classes that implement this interface provide encryption key + encoded entries
-/// Used to add support for equality comparison using `==` and computing hash codes.
-abstract class EnvysticInterface {
-  /// This getter method implementation should returns the encryption key and
-  /// encoded entries used for comparison and hashing.
-  String get pairKeyEncodedEntries$;
+import 'helper/utils.dart';
+
+/// A parent class for all Envystic generated classes.
+/// Used to add support for equality comparison using `==`,
+/// computing hash codes and to add support methods.
+class EnvysticInterface {
+  const EnvysticInterface({this.encryptionKey});
+  final String? encryptionKey;
+
+  String get encodedEntries => throw UnimplementedError();
+  String get encodedKeysFields => throw UnimplementedError();
 
   /// Retrieves the value associated with the given [fieldName] from the loaded environment entries.
   /// The type of the returned value is inferred based on the specified generic type [T].
@@ -19,15 +23,17 @@ abstract class EnvysticInterface {
   /// In this example, `specialKey` is retrieved from the loaded environment entries as an integer.
   /// If the field does not exist or the value cannot be cast to an integer,
   /// this method will throw an exception.
-  T getForField<T>(String fieldName);
+  T getForField<T>(String fieldName) =>
+      getEntryValue(fieldName, encodedEntries, encryptionKey);
 
   /// Checks if the provided [envKey] exists in the loaded environment keys.
   /// Returns `true` if the key exists, `false` otherwise.
-  bool isKeyExists(String envKey);
+  bool isKeyExists(String envKey) => isEnvKeyExists(envKey, encodedKeysFields);
 
   /// Gets the field name associated with the provided [envKey].
   /// If the [envKey] exists, returns the corresponding field name; otherwise, returns `null`.
-  String? getFieldName(String envKey);
+  String? getFieldName(String envKey) =>
+      getFieldNameForKey(envKey, encodedKeysFields);
 
   /// Retrieves the value associated with the given [envKey] from the loaded environment entries.
   /// The type of the returned value is inferred based on the actual field type.
@@ -59,4 +65,14 @@ abstract class EnvysticInterface {
       return null;
     }
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EnvysticInterface &&
+          encryptionKey == other.encryptionKey &&
+          encodedEntries == other.encodedEntries;
+
+  @override
+  int get hashCode => encryptionKey.hashCode ^ encodedEntries.hashCode;
 }

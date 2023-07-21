@@ -1,3 +1,17 @@
+targets:
+  $default:
+    builders:
+      envystic_generator|envystic:
+        enabled: true
+        generate_for:
+          exclude:
+            - test
+            - example
+      source_gen|combining_builder:
+        options:
+          ignore_for_file:
+            - "type=lint"
+
 builders:
   envystic:
     import: "package:envystic_generator/builder.dart"
