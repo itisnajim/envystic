@@ -2,7 +2,10 @@ import 'package:envystic/envystic.dart';
 
 part 'env_all.g.dart';
 
-@EnvysticAll(path: '.env.example') //, encryptionKey: 'EncryptMorePlease')
+@EnvysticAll(
+  path: '.env.example',
+  encryptionKeyOutput: 'example.key',
+)
 class EnvAll extends _$EnvAll {
   const EnvAll({super.encryptionKey});
 

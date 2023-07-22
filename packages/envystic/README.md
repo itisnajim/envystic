@@ -1,4 +1,5 @@
-# Envystic
+# Envystic - Simplified Environment Variable Management for Dart/Flutter
+
 [![pub package](https://img.shields.io/pub/v/envystic.svg)](https://pub.dartlang.org/packages/envystic) [![GitHub license](https://img.shields.io/github/license/itisnajim/envystic)](https://github.com/itisnajim/envystic/blob/main/LICENSE)  [![GitHub issues](https://img.shields.io/github/issues/itisnajim/envystic)](https://github.com/itisnajim/envystic/issues)
 
 
@@ -82,8 +83,12 @@ void main() {
 
 The `Envystic` annotation supports the following optional parameters:
 
-* `path`: The path to the environment variables file. By default, it is set to `.env`'.
-* `keyFormat`: Specifies the format of key names in the environment file (e.g., .env). Defaults to [KeyFormat.none].
+* `path`: Specifies the path to the environment variables file. If not provided, the default path is `.env`.
+* `keyFormat`: Specifies the format of key names in the environment file (e.g., .env file). You can choose from different naming conventions such as kebab-case, snake_case, PascalCase, or SCREAMING_SNAKE_CASE.
+* `generateEncryption`: Determines whether to generate the `encryptionKeyOutput` if it does not already exist. Set this to `true` if you want Envystic to create an `encryption` key automatically for enhanced security.
+* `encryptionKeyOutput`: Specifies the file path to use and save the `encryption` key. If `generateEncryption` is set to `true` and this parameter is `null`, the default path `env_encryption.key` will be used to store the encryption key. Alternatively, if you set `encryptionKeyOutput` to `null` and `generateEncryption` is not `true`, No encryption will be applied, and the values will be subjected to a `base64` encoding for a basic level of protection.
+
+These configuration options for efficient environment variable management. Customize file paths, key naming conventions, and enhance security with encryption as needed.
 
 ## EnvysticAll Annotation
 The `EnvysticAll` annotation provides an automatic way to load all keys from the environment file without the need to specify them individually using getters.
@@ -119,16 +124,14 @@ void main() {
 
 It is recommended to use the `@Envystic` annotation instead of `@EnvysticAll`. Using `@Envystic` allows you to specify only the fields needed, reducing class overload and ensuring better maintainability.
 
-## Encryption
+## Global Configuration
 
-Envystic provides a simple yet effective way to enhance the security of your dotenv values through encryption. By default, if no encryption is applied, Envystic will use base64 encoding to provide a basic level of protection for your sensitive data.
-
-To activate encryption for your dotenv values, you can follow either of these methods:
+To override `null` parameters in each annotated class, you can use the `build.yaml` file or specify `command` line options when running `build_runner`. Here's how you can configure the options:
 
 ### Method 1: Via `build.yaml`
-1. Open your `build.yaml` file or create one.
-2. Locate the targets section and look for the $default target.
-3. Under the $default target, find or add the `envystic_generator|envystic` builder and modify the options as follows:
+1. Open your `build.yaml` file or create one if it doesn't exist.
+2. Look for the `targets` section and locate the `$default` target.
+3. Under the `$default` target, find or add the `envystic_generator|envystic` builder and modify the options as follows:
 
 ```yaml
 targets:
@@ -151,19 +154,16 @@ targets:
 
 ### Method 2: Via Command Line
 1. Open your terminal or command prompt.
-2. Use the following command to build your project while enabling encryption:
+2. Use the following command to specify the desired configuration:
 
 ```console
 dart run build_runner build --define envystic_generator:envystic=generate_encryption=true --define envystic_generator:envystic=encryption_key_output=env_encryption_output.key
 ```
 
-This command will generate the encryption key and store it in the file specified as `encryption_key_output` (in this example, `env_encryption_output.key`).
+With these configuration options, you can customize how Envystic handles your environment variables. The `key_format` allows you to choose the desired naming convention for the keys (e.g., kebab-case, snake_case, PascalCase, SCREAMING_SNAKE_CASE, etc.). The `generate_encryption` option lets you decide whether to generate an encryption key for enhanced security, and you can specify the file path using `encryption_key_output`.
 
-Alternatively, if you want to use the default output file name (`env_encryption.key`), you can omit the `encryption_key_output` parameter:
+By setting these global options, you can ensure consistent behavior across all your annotated classes, making it easier to manage and maintain your environment variables in Dart and Flutter projects with Envystic.
 
-```console
-dart run build_runner build --define envystic_generator:envystic=generate_encryption=true
-```
 
 ## Methods
 
@@ -210,6 +210,22 @@ Returns true if the key exists, false otherwise.
 
 Gets the field name associated with the provided `envKey`.
 If the `envKey` exists, returns the corresponding field name; otherwise, returns `null`.
+
+## Important
+
+When using the Envystic package for environment variable management in your Dart/Flutter projects, there are a few crucial points to keep in mind:
+
+1. Envystic uses the build_runner tool to generate the necessary code based on the annotations in your environment variable class. Whenever you make changes to the annotated environment class or modify the .env file, you must run the following command to regenerate the required code:
+
+``` console
+dart run build_runner build
+```
+
+Failing to run this command after making changes may result in outdated or incorrect code, leading to unexpected behavior in your application.
+
+2. Secure Encryption Key Management: If you choose to use encryption for your environment variables, it is essential to handle the encryption key securely. The encryption key is a sensitive piece of information that should never be committed to version control or exposed in any way. Make sure to add the encryption key file (e.g., `env_encryption.key`) to your `.gitignore` or equivalent version control ignore file to prevent accidental commits.
+
+3. Separate Environments: Consider using different .env files for different environments (e.g., development, staging, production). This helps manage different configurations effectively and reduces the risk of using incorrect values in different environments.
 
 
 ## Author

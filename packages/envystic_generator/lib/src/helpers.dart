@@ -150,22 +150,3 @@ Future<File> saveContentToFile(String content, String filePath) {
   // Create the file if it doesn't exist, and overwrite if it does.
   return file.writeAsString(content);
 }
-
-/// Saves the provided [content] to a file at the given [filePath] synchronously.
-/// If the file already exists, its contents will be overwritten.
-void saveContentToFileSync(String content, String filePath) {
-  File file = File(filePath);
-
-  // Create the file if it doesn't exist, and overwrite if it does.
-  return file.writeAsStringSync(content);
-}
-
-/// Read file content as String
-String? readFileContentSync(String filePath) {
-  File file = File(filePath);
-  try {
-    return file.readAsStringSync();
-  } catch (e) {
-    return null;
-  }
-}

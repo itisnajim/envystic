@@ -1,9 +1,9 @@
 import 'helper/utils.dart';
 
-/// A parent class for all Envystic generated classes.
+/// An abstract parent class for all Envystic generated classes.
 /// Used to add support for equality comparison using `==`,
 /// computing hash codes and to add support methods.
-class EnvysticInterface {
+abstract class EnvysticInterface {
   const EnvysticInterface({this.encryptionKey});
   final String? encryptionKey;
 

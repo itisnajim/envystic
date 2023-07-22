@@ -1,3 +1,7 @@
+## 0.3.1
+
+- Allows each annotated item to have its own encryption generation options, providing better security and customization options compared to a single global options.
+
 ## 0.3.0
 
 - Enhanced Encryption Control: The encryption key is now handled via the constructor of the annotated class, offering more control over the encryption process. You can pass the encryption key as needed during the instantiation of your environment variable class.

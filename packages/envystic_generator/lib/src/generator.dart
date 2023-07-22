@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -12,6 +13,7 @@ import 'package:source_helper/source_helper.dart';
 
 import 'fields.dart';
 import 'helpers.dart';
+import 'key_info.dart';
 import 'load_envs.dart';
 import 'types.dart';
 import 're_case.dart';
@@ -24,30 +26,38 @@ final logger = Logger('EnvysticGenerator:');
 /// Will throw an [InvalidGenerationSourceError] if the annotated
 /// element is not a [classElement].
 class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
-  String? encryptionKey;
-  EnvysticGenerator({
-    this.options,
-  }) : encryptionKey = EncryptionKeyFile(options.encryptionKeyOutput).read();
-
   final BuilderOptions? options;
 
+  String? optionsEncryptionKey;
+  Map<String, KeyInfo> elementsKeys = {};
+  EnvysticGenerator({
+    this.options,
+  }) : optionsEncryptionKey = options.tryGetOrGenerateKey;
+
   @override
-  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) {
-    if (options.generateEncryption && encryptionKey == null) {
-      encryptionKey = generateRandomEncryptionKey(16);
+  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) async {
+    final annotatedClasses = library.annotatedWith(typeChecker);
+
+    for (var annotatedElement in annotatedClasses) {
+      final annotation = annotatedElement.annotation;
+      final element = annotatedElement.element;
+      final className = element.name;
+
+      elementsKeys.addAll(
+        {
+          className!: KeyInfo(
+            annotation.encryptionKeyOutput(options),
+            annotation.tryGetOrGenerateKey(options),
+          )
+        },
+      );
     }
 
     final result = super.generate(library, buildStep);
 
-    if (encryptionKey != null) {
-      Future.value(result).then((_) {
-        return EncryptionKeyFile(options.encryptionKeyOutput)
-            .write(encryptionKey!);
-      }).onError(
-          (error, stackTrace) => throw error ?? "Unknown error ocurred.");
-    }
-
-    return result;
+    return options
+        .writeEncryptionKeyIfNeeded(optionsEncryptionKey)
+        .then((_) => result);
   }
 
   @override
@@ -150,6 +160,8 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
       });
     }
 
+    final keyInfo = elementsKeys[className];
+
     final List<MapEntry<String, dynamic>> entries = [];
     final List<MapEntry<String, String>> envKeyFieldPairs = [];
     final List<String> fieldsValues = [];
@@ -158,7 +170,10 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
       final envKey = field.envKey;
       final value = field.valueAsString();
 
-      entries.add(MapEntry(name, encodeValue(value, encryptionKey)));
+      entries.add(MapEntry(
+        name,
+        encodeValue(value, keyInfo?.key ?? optionsEncryptionKey),
+      ));
       envKeyFieldPairs.add(MapEntry(envKey, name));
       fieldsValues.add(field.generate());
     }
@@ -188,7 +203,12 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 
       }""");
 
-    return buffer.toString();
+    return annotation
+        .writeEncryptionKeyIfNeeded(
+          keyInfo?.key ?? optionsEncryptionKey,
+          options,
+        )
+        .then((value) => buffer.toString());
   }
 }
 
@@ -196,13 +216,72 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 extension BuilderOptionsExtension on BuilderOptions? {
   /// Returns the value of the 'encryption_key_output' configuration as a String,
   /// or null if it's not available or not a String.
-  String get encryptionKeyOutput =>
+  String? get encryptionKeyOutput =>
       this?.config['encryption_key_output'] as String? ??
-      EncryptionKeyFile.defaultPath;
+      (mustGenerateEncryption ? EncryptionKeyFile.defaultPath : null);
 
   /// Parses the 'generate_encryption' configuration value as a boolean.
   /// If the value is not a valid boolean representation, it defaults to false.
-  bool get generateEncryption =>
+  bool get mustGenerateEncryption =>
       bool.tryParse(this?.config['generate_encryption'].toString() ?? '') ??
       false;
+
+  String? get tryGetOrGenerateKey {
+    var encryptionKey =
+        !mustGenerateEncryption ? null : generateRandomEncryptionKey(16);
+    if (encryptionKeyOutput != null) {
+      encryptionKey ??= EncryptionKeyFile(encryptionKeyOutput).readSync();
+    }
+    return encryptionKey;
+  }
+
+  Future<File?> writeEncryptionKeyIfNeeded(String? encryptionKey) {
+    if (encryptionKey == null) return Future.value(null);
+    if (encryptionKeyOutput == null) return Future.value(null);
+    return EncryptionKeyFile(encryptionKeyOutput).write(encryptionKey);
+  }
+}
+
+extension ConstantReaderExt on ConstantReader {
+  bool mustGenerateEncryption(BuilderOptions? options) =>
+      read('generateEncryption').isNull
+          ? options.mustGenerateEncryption
+          : read('generateEncryption').boolValue;
+
+  String? encryptionKeyOutput(BuilderOptions? options) =>
+      !read('encryptionKeyOutput').isNull
+          ? read('encryptionKeyOutput').stringValue
+          : mustGenerateEncryption(options)
+              ? options.encryptionKeyOutput ?? EncryptionKeyFile.defaultPath
+              : null;
+
+  bool isEncrypted(BuilderOptions? options) =>
+      mustGenerateEncryption(options) || encryptionKeyOutput(options) != null;
+
+  String? tryGetOrGenerateKey(BuilderOptions? options) {
+    final String? optionsEncryptionKeyOutput = options.encryptionKeyOutput;
+    var encryptionKey = !mustGenerateEncryption(options)
+        ? null
+        : generateRandomEncryptionKey(16);
+
+    if (optionsEncryptionKeyOutput != null) {
+      encryptionKey ??=
+          EncryptionKeyFile(optionsEncryptionKeyOutput).readSync();
+    }
+    return encryptionKey;
+  }
+
+  Future<File?> writeEncryptionKeyIfNeeded(
+    String? encryptionKey,
+    BuilderOptions? options,
+  ) {
+    if (encryptionKey == null) return Future.value(null);
+    final String? optionsEncryptionKeyOutput = options.encryptionKeyOutput;
+
+    if (encryptionKeyOutput(options) == null) return Future.value(null);
+    if (optionsEncryptionKeyOutput == encryptionKeyOutput(options)) {
+      Future.value(null);
+    }
+    return EncryptionKeyFile(encryptionKeyOutput(options)).write(encryptionKey);
+  }
 }

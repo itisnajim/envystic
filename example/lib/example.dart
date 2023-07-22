@@ -4,9 +4,8 @@ import 'env_all.dart';
 
 void main() {
   final start = DateTime.now();
-  const encryptionKey = 'Y2lVNEVLa3loZWVFZkJvMA==';
 
-  const env1 = Env1(encryptionKey: encryptionKey);
+  const env1 = Env1(encryptionKey: "ZVo2ZURkSmRnUWNVUkJqSg==");
   print('env1.key1 ${env1.key1}');
   print('env1.key2 ${env1.key2}');
   print('env1.isKeyExists("FOO") ${env1.isKeyExists('FOO')}');
@@ -18,7 +17,7 @@ void main() {
 
   print('\n');
 
-  const envAll = EnvAll(encryptionKey: encryptionKey);
+  const envAll = EnvAll(encryptionKey: "OXBaZkQwTlZmQVg4Nk4yQw==");
   print(
       'envAll.specialKey ${envAll.specialKey}, type: ${envAll.specialKey.runtimeType}');
   print('envAll.key1 ${envAll.key1}, type: ${envAll.key1.runtimeType}');
