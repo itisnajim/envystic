@@ -6,7 +6,7 @@ bool _isNullable<T>() => null is T;
 
 T _parseValue<T>(
   String? strValue, {
-  T Function(String)? fromString,
+  Enum Function(String)? fromString,
 }) {
   final isNullable = _isNullable<T>();
 
@@ -26,16 +26,15 @@ T _parseValue<T>(
     return (isNullable ? num.tryParse(strValue!) : num.parse(strValue!)) as T;
   } else if (['bool', 'bool?'].contains(T.toString())) {
     return (strValue!.toLowerCase() == 'true') as T;
-  } else if (T == Enum || fromString != null) {
-    if (fromString == null) {
-      throw Exception('fromString is required for Enum');
-    }
-    final parsedValue = fromString(strValue!.split('.').last);
-    if (parsedValue == null) {
+  } else if (fromString != null) {
+    // is Enum type
+    try {
+      final parsedValue = fromString(strValue!.split('.').last);
+      return parsedValue as T;
+    } catch (e) {
       throw Exception(
           'Type `${T.toString()}` does not align with value `$strValue`.');
     }
-    return parsedValue;
   } else if (['dynamic', 'Object?'].contains(T.toString())) {
     return (strValue == null
         ? null
@@ -77,7 +76,7 @@ T getEntryValue<T>(
   String key,
   String encodedEntries,
   String? encryptionKey, {
-  T Function(String)? fromString,
+  Enum Function(String)? fromString,
 }) {
   final bytes = base64.decode(encodedEntries);
   final stringDecoded = String.fromCharCodes(bytes);
@@ -96,7 +95,7 @@ T getEntryValue<T>(
       "Invalid encryption key, $e",
     );
   }
-  return _parseValue(decryptedValue);
+  return _parseValue(decryptedValue, fromString: fromString);
 }
 
 /// **Ignore This Method** Used by the package

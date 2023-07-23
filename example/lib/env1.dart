@@ -1,6 +1,15 @@
 import 'package:envystic/envystic.dart';
 
+import 'test_enum.dart' as e;
+
 part 'env1.g.dart';
+
+enum TestEnum2 {
+  foo,
+  bar,
+  baz,
+  qux,
+}
 
 @Envystic(path: '.env.example')
 class Env1 extends _$Env1 {
@@ -18,6 +27,18 @@ class Env1 extends _$Env1 {
   @EnvysticField(
       name: 'MY_SPECIAL_KEY') // Pulled from system environment variables
   int? get specialKey;
+
+  @override
+  @EnvysticField()
+  e.TestEnum get test;
+
+  @override
+  @EnvysticField()
+  TestEnum2? get test2;
+
+  @override
+  @envysticField
+  get notExists;
 
   // ignored
   String get drink => 'Coffee';

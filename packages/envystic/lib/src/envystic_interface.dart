@@ -16,6 +16,9 @@ abstract class EnvysticInterface {
   /// Throws an exception if the [fieldName] does not exist in the loaded environment entries
   /// or if the value cannot be cast to the specified type [T].
   ///
+  /// [fromString] used to finds the enum value in enum list with name [String].
+  /// If this is an enum just pass: fromString: TheEnum.values.byName
+  ///
   /// Example:
   /// ```
   /// final myValue = env.getForField<int>('specialKey');

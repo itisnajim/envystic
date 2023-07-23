@@ -1,6 +1,12 @@
+## 0.3.2
+
+- Support Type `Enum`: Introduces the capability to handle fields with `Enum` data types.
+
+
 ## 0.3.1
 
 - Allows each annotated item to have its own encryption generation options, providing better security and customization options compared to a single global options.
+
 
 ## 0.3.0
 

@@ -7,9 +7,9 @@ part of 'env_all.dart';
 // **************************************************************************
 
 const String _encodedEntries =
-    'eyJzcGVjaWFsS2V5IjoiWjgxU21ENW96KzVrVEM4WXZmbDhaQT09Iiwia2V5MSI6InNlVFpmRnIwUUt2VHc4UUdqaVZRNGc9PSIsImZvbyI6Ilo4MVNtRDVveis1a1RDOFl2Zmw4WkE9PSIsInRlc3RTdHJpbmciOiJ2TXR5dFZQT2N2eHdJNzgvYkdZcTVnPT0iLCJ0ZXN0U3RyaW5nMiI6InIvZkdINHltU09qZGo5aS8wdjYwYWc9PSIsInRlc3RJbnQiOiJaODFTbUQ1b3orNWtUQzhZdmZsOFpBPT0iLCJ0ZXN0RG91YmxlIjoiYVNxUnVzNmtaRlh6d1cvT3I0cHpTZz09IiwidGVzdEJvb2wiOiJZTEdXOG1hMnVoazdqRHRIcFBDbm53PT0iLCJ0ZXN0RHluYW1pYyI6IjluWGtkRzc5b2YwaW9GSlNCc1lubFE9PSJ9';
+    'eyJzcGVjaWFsS2V5IjoiZm5ucnVhaUlSekxuRDB4TEZoRlFHdz09Iiwia2V5MSI6IjVBc0FMMDZuL0xDd3ArajE4OFVmL2c9PSIsImZvbyI6ImZubnJ1YWlJUnpMbkQweExGaEZRR3c9PSIsInRlc3QiOiJXS25kQkZ4RWFzdVROcmRKRndDQVFRPT0iLCJ0ZXN0U3RyaW5nIjoiZlZVaUNVSTdHREQ3d0RTZGRWRDR0Zz09IiwidGVzdFN0cmluZzIiOiJGa3FSMGdmdTYwbStUY2xQWFJtamd3PT0iLCJ0ZXN0SW50IjoiZm5ucnVhaUlSekxuRDB4TEZoRlFHdz09IiwidGVzdERvdWJsZSI6ImU5ZmNLcURiTU9ERDhsTU9BM2hZRmc9PSIsInRlc3RCb29sIjoiNGplWHQ2enFualROOTlJa1UrMXprQT09IiwidGVzdER5bmFtaWMiOiJ2dDdYVmpjOFFVMUhPbmNreitzd2JnPT0ifQ==';
 const String _encodedKeysFields =
-    'eyJNWV9TUEVDSUFMX0tFWSI6InNwZWNpYWxLZXkiLCJLRVkxIjoia2V5MSIsIkZPTyI6ImZvbyIsInRlc3Rfc3RyaW5nIjoidGVzdFN0cmluZyIsInRlc3RTdHJpbmciOiJ0ZXN0U3RyaW5nMiIsInRlc3RJbnQiOiJ0ZXN0SW50IiwidGVzdERvdWJsZSI6InRlc3REb3VibGUiLCJ0ZXN0Qm9vbCI6InRlc3RCb29sIiwidGVzdER5bmFtaWMiOiJ0ZXN0RHluYW1pYyJ9';
+    'eyJNWV9TUEVDSUFMX0tFWSI6InNwZWNpYWxLZXkiLCJLRVkxIjoia2V5MSIsIkZPTyI6ImZvbyIsIlRFU1QiOiJ0ZXN0IiwidGVzdF9zdHJpbmciOiJ0ZXN0U3RyaW5nIiwidGVzdFN0cmluZyI6InRlc3RTdHJpbmcyIiwidGVzdEludCI6InRlc3RJbnQiLCJ0ZXN0RG91YmxlIjoidGVzdERvdWJsZSIsInRlc3RCb29sIjoidGVzdEJvb2wiLCJ0ZXN0RHluYW1pYyI6InRlc3REeW5hbWljIn0=';
 
 class _$EnvAll extends EnvysticInterface {
   const _$EnvAll({super.encryptionKey});
@@ -24,6 +24,8 @@ class _$EnvAll extends EnvysticInterface {
   String get key1 => getForField('key1');
 
   int get foo => getForField('foo');
+
+  String get test => getForField('test');
 
   String get testString => getForField('testString');
 

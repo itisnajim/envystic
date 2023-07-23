@@ -1,11 +1,44 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:mirrors';
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:envystic/envystic.dart';
 
 import 'environment_field.dart';
-import 'fields.dart';
+import 're_case.dart';
+import 'field.dart';
+
+String getEnvKey(
+  String fieldKey,
+  KeyFormat format,
+  String? nameOverride,
+) {
+  if (nameOverride != null) return nameOverride;
+
+  String envKey;
+
+  switch (format) {
+    case KeyFormat.none:
+      envKey = fieldKey;
+      break;
+    case KeyFormat.pascal:
+      envKey = fieldKey.pascalCase;
+      break;
+    case KeyFormat.snake:
+      envKey = fieldKey.snakeCase;
+      break;
+    case KeyFormat.kebab:
+      envKey = fieldKey.pascalCase;
+      break;
+    case KeyFormat.screamingSnake:
+      envKey = fieldKey.snakeCase.toUpperCase();
+      break;
+  }
+
+  return envKey;
+}
 
 /// An extension method for the `FieldElement` class.
 extension FieldElementExt on FieldElement {
@@ -115,6 +148,11 @@ String incrementLastInt(String input) {
   } else {
     return '${input}2';
   }
+}
+
+bool isEnum(Type type) {
+  TypeMirror typeMirror = reflectType(type);
+  return typeMirror is ClassMirror && typeMirror.isEnum;
 }
 
 /// Generates a random encryption key of the specified [length].

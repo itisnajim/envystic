@@ -7,6 +7,7 @@ const supportedTypes = {
   'double': double,
   'num': num,
   'bool': bool,
+  'Enum': Enum,
   'dynamic': dynamic,
   'Object': Object,
 };
@@ -17,10 +18,9 @@ Type getType(DartType dartType) {
   if (dartType.isDartCoreDouble) return supportedTypes['double']!;
   if (dartType.isDartCoreNum) return supportedTypes['num']!;
   if (dartType.isDartCoreBool) return supportedTypes['bool']!;
-  if (dartType.isDartCoreObject && !dartType.isNullableType) {
-    return supportedTypes['Object']!;
-  }
-  if (dartType.isLikeDynamic) return supportedTypes['dynamic']!;
+  if (dartType.isEnum) return supportedTypes['Enum']!;
+  if (dartType.isDartCoreObject) return supportedTypes['Object']!;
+  if (dartType is DynamicType) return supportedTypes['dynamic']!;
   throw "Type `$dartType` not supported";
 }
 

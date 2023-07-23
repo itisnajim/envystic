@@ -41,6 +41,10 @@ import 'package:envystic/envystic.dart';
 ```dart
 part 'env.g.dart';
 
+enum RoleEnum {
+  editor, author, viewer
+}
+
 @envystic
 class Env extends _$Env {
   // If no encryption, you can omit `super.encryptionKey`
@@ -54,6 +58,10 @@ class Env extends _$Env {
   @override
   @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
   int? get key2;
+
+  @override
+  @envysticField
+  RoleEnum get role;
 
   // ignored
   String get drink => 'Coffee';
@@ -75,6 +83,7 @@ void main() {
   // Access environment variables
   print(env.key1); 
   print(env.key2);
+  print(env.role);
   print(env.drink); // "Coffee"
 }
 ```
@@ -215,13 +224,21 @@ If the `envKey` exists, returns the corresponding field name; otherwise, returns
 
 When using the Envystic package for environment variable management in your Dart/Flutter projects, there are a few crucial points to keep in mind:
 
-1. Envystic uses the build_runner tool to generate the necessary code based on the annotations in your environment variable class. Whenever you make changes to the annotated environment class or modify the .env file, you must run the following command to regenerate the required code:
+1. Envystic relies on the build_runner tool to generate the necessary code based on the annotations in your environment variable class. To ensure that the generated code remains up-to-date with any changes, follow these steps:
+
+* Whenever you make modifications to the annotated environment class, execute the following command to regenerate the required code:
 
 ``` console
 dart run build_runner build
 ```
 
-Failing to run this command after making changes may result in outdated or incorrect code, leading to unexpected behavior in your application.
+* It's important to note that build_runner does not automatically detect changes in the .env files. Therefore, before running the build command, it's necessary to clean the previous build by using the following command:
+
+``` console
+dart run build_runner clean
+```
+
+Failing to run these commands after making changes may result in outdated or incorrect code, leading to unexpected behavior in your application.
 
 2. Secure Encryption Key Management: If you choose to use encryption for your environment variables, it is essential to handle the encryption key securely. The encryption key is a sensitive piece of information that should never be committed to version control or exposed in any way. Make sure to add the encryption key file (e.g., `env_encryption.key`) to your `.gitignore` or equivalent version control ignore file to prevent accidental commits.
 

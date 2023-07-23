@@ -11,7 +11,7 @@ import 'package:envystic/envystic.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:source_helper/source_helper.dart';
 
-import 'fields.dart';
+import 'field.dart';
 import 'helpers.dart';
 import 'key_info.dart';
 import 'load_envs.dart';
@@ -94,7 +94,6 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
         element: element,
       );
     }
-    final fields = <Field<dynamic>>[];
 
     final classFields = [
       ...element.allSupertypes.expand((e) => e.element.fields).where(
@@ -110,28 +109,57 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 
     final fieldAnnotations = getAccessors(interface, element.library);
 
+    final fieldEnumType = <String, String>{};
+
+    final fields = <Field>[];
+
     try {
-      for (final field in classFields) {
-        final annotation =
-            fieldAnnotations.where((e) => e.name == field.name).firstOrNull;
+      for (final fieldElement in classFields) {
+        final annotation = fieldAnnotations
+            .where((e) => e.name == fieldElement.name)
+            .firstOrNull;
         if (annotation == null) continue;
-        //final isAbstract = field.isAbstract || field.getter?.isAbstract == true;
+        //final isAbstract = fieldElement.isAbstract || fieldElement.getter?.isAbstract == true;
 
         final nameOverride = annotation.nameOverride;
         final defaultValue = annotation.defaultValue;
 
-        fields.add(Field.of(
-          element: field,
-          name: field.name,
-          type: getType(field.type),
-          isNullable:
-              field.type.nullabilitySuffix == NullabilitySuffix.question,
-          keyFormat: keyFormat,
-          nameOverride: nameOverride,
-          defaultValue: defaultValue,
-          values: values,
-          typePrefix: field.typePrefix,
-        ));
+        final typeDisplayName =
+            fieldElement.type.getDisplayString(withNullability: false);
+
+        final type = getType(fieldElement.type);
+
+        final typePrefix = fieldElement.typePrefix;
+        final isNullable =
+            fieldElement.type.nullabilitySuffix == NullabilitySuffix.question;
+        final name = fieldElement.name;
+
+        final envKey = getEnvKey(name, keyFormat, nameOverride);
+
+        final value = values[envKey] ??
+            Platform.environment[envKey] ??
+            defaultValue?.toStringValue();
+
+        final field = Field(
+          element: fieldElement,
+          name: name,
+          type: type,
+          dartType: fieldElement.type,
+          isNullable: isNullable,
+          envKey: envKey,
+          value: value,
+          typePrefix: typePrefix,
+          typeDisplayName: typeDisplayName,
+        );
+
+        fields.add(field);
+
+        if (fieldElement.type.isEnum) {
+          fieldEnumType.addAll({
+            escapeDartString(fieldElement.name):
+                field.typeWithPrefix(withNullability: false),
+          });
+        }
       }
     } catch (e) {
       if (e is InvalidGenerationSourceError) rethrow;
@@ -147,16 +175,28 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
         if (fields.where((f) => f.name == name).isNotEmpty) {
           name = incrementLastInt(name);
         }
-        fields.add(Field.of(
+
+        final type = getTypeFromString(value);
+        final typeDisplayName = type.toString().replaceAll('?', '');
+
+        final field = Field(
           element: element,
           name: name,
-          nameOverride: key,
-          type: getTypeFromString(value),
+          type: type,
+          envKey: key,
           isNullable: value.isEmpty,
-          keyFormat: keyFormat,
-          values: values,
-          typePrefix: null,
-        ));
+          value: value,
+          typeDisplayName: typeDisplayName,
+        );
+
+        fields.add(field);
+
+        if (isEnum(type)) {
+          fieldEnumType.addAll({
+            escapeDartString(name):
+                field.typeWithPrefix(withNullability: false),
+          });
+        }
       });
     }
 
@@ -187,6 +227,23 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 
     final buffer = StringBuffer();
 
+    final getForFieldOverride = fieldEnumType.isEmpty
+        ? ''
+        : """
+@override
+T getForField<T>(String fieldName) => getEntryValue(
+      fieldName,
+      encodedEntries,
+      encryptionKey,
+      fromString: fieldEnumValues[fieldName]?.byName,
+    );
+
+""";
+
+    final fieldEnumValuesStr = fieldEnumType.isEmpty
+        ? ''
+        : ' Map<String, List<Enum>> get fieldEnumValues => ${fieldEnumType.map((k, v) => MapEntry(k, '$v.values'))};';
+
     buffer.writeln("""
       const String _encodedEntries = ${escapeDartString(encodedJson)};
       const String _encodedKeysFields = ${escapeDartString(encodedKeysFieldsJson)};
@@ -201,6 +258,7 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 
         ${fieldsValues.join('\n')}
 
+        $getForFieldOverride$fieldEnumValuesStr
       }""");
 
     return annotation
@@ -230,7 +288,8 @@ extension BuilderOptionsExtension on BuilderOptions? {
     var encryptionKey =
         !mustGenerateEncryption ? null : generateRandomEncryptionKey(16);
     if (encryptionKeyOutput != null) {
-      encryptionKey ??= EncryptionKeyFile(encryptionKeyOutput).readSync();
+      encryptionKey =
+          EncryptionKeyFile(encryptionKeyOutput).readSync() ?? encryptionKey;
     }
     return encryptionKey;
   }
@@ -244,9 +303,9 @@ extension BuilderOptionsExtension on BuilderOptions? {
 
 extension ConstantReaderExt on ConstantReader {
   bool mustGenerateEncryption(BuilderOptions? options) =>
-      read('generateEncryption').isNull
-          ? options.mustGenerateEncryption
-          : read('generateEncryption').boolValue;
+      !read('generateEncryption').isNull
+          ? read('generateEncryption').boolValue
+          : options.mustGenerateEncryption;
 
   String? encryptionKeyOutput(BuilderOptions? options) =>
       !read('encryptionKeyOutput').isNull
@@ -265,8 +324,9 @@ extension ConstantReaderExt on ConstantReader {
         : generateRandomEncryptionKey(16);
 
     if (optionsEncryptionKeyOutput != null) {
-      encryptionKey ??=
-          EncryptionKeyFile(optionsEncryptionKeyOutput).readSync();
+      encryptionKey =
+          EncryptionKeyFile(optionsEncryptionKeyOutput).readSync() ??
+              encryptionKey;
     }
     return encryptionKey;
   }
