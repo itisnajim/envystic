@@ -39,7 +39,7 @@ class Field {
     }
 
     final parsedValue = _parseValue();
-    if (!isNullable && parsedValue == null) {
+    if (!isNullable && type != dynamic && parsedValue == null) {
       throw InvalidGenerationSourceError(
         "Type `$type` does not align with value `$value`.",
         element: element,

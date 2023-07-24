@@ -1,3 +1,9 @@
+## 0.3.3
+
+- Fix issue when using `dynamic` type, 
+- Add more documentation for encryption usage in the example folder.
+
+
 ## 0.3.2
 
 - Support Type `Enum`: Introduces the capability to handle fields with `Enum` data types.

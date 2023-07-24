@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "name": "Dart",
+      "type": "dart",
+      "request": "launch",
+      "program": "example/lib/main.dart",
+      "toolArgs": [
+        "--define=ENCRYPTION_ENV1_KEY=y\u001aN@G]\u001e|P|_y\u001a\u001adA\u001fndk\u0017\u0017",
+        "--define=ENCRYPTION_ENV_ALL_KEY=y}^OG\u0013cNm`C}mpdO@|YN{\u0017\u0017"
+      ]
+    }
+  ]
+}
