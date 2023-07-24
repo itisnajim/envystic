@@ -43,7 +43,7 @@ String endec(String input, {bool escaped = false}) {
 }
 
 /// to use in the command line:
-/// echo $(dart run lib/endec.dart 'Input String Example'
+/// echo $(dart run lib/endec.dart 'InputStringExample')
 void main(List<String> args) {
-  print(endec('S0djUmw4VzVuSU00Nk5DNA==', escaped: true));
+  print(endec(args.first, escaped: true));
 }
