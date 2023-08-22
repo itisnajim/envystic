@@ -12,8 +12,6 @@ Envystic is a Dart/Flutter package that simplifies the management of environment
 
 * **Annotation-Based**: Defining environment variables is straightforward with the use of annotations. The Envystic and EnvysticField annotations help generate the necessary code for accessing your environment variables.
 
-* **Custom Key Names**: You can specify custom key names for your environment variables in the .env file, making it easy to reference them in your code.
-
 * **Advanced Loading Options**: Envystic supports advanced loading options, allowing you to fetch environment variables from various sources, including remote configurations, system environment variables, or pre-stored with an optional security.
 
 * **Flutter and Dart Support**: Envystic is designed to work seamlessly with both Flutter and Dart projects, allowing you to manage environment variables consistently across different types of applications.
@@ -39,7 +37,7 @@ dart pub add envystic && dart pub add --dev envystic_generator build_runner
 import 'package:envystic/envystic.dart';
 ```
 
-2. Define an environment variable class using the `Envystic` annotation and the `EnvysticField` annotation for each desired variable:
+2. Define an environment variable class using the `Envystic` annotation and the `EnvysticField` annotation to customize how a field should be generated and handled.
 
 ```dart
 part 'env.g.dart';

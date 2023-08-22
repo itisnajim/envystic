@@ -1,7 +1,7 @@
 name: envystic
-description: "Env Variable Maestro! Seamlessly master config from remote sources, pre-stored via build_runner, or straight from the running system. Enchanting code, mystical security! ✨🌟"
+description: "Env Variable Maestro! Envystic - The Ultimate Dart/Flutter Environment Variable Management Solution ☆"
 
-version: 0.4.0
+version: 0.4.0+1
 repository: https://github.com/itisnajim/envystic
 issue_tracker: https://github.com/itisnajim/envystic/issues
 

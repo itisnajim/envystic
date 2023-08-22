@@ -35,8 +35,7 @@ export ENCRYPTION_ENV_ALL_KEY=$(dart run lib/endec.dart 'SWtUem9IdGJiWGZNejVsdQ=
   print('env1.key1 ${env1.key1}');
   print('env1.key2 ${env1.key2}');
   print('env1.isKeyExists("FOO") ${env1.isKeyExists('FOO')}');
-  final int? maybeFoo = env1.tryGet('FOO');
-  print('env1.tryGet("FOO") $maybeFoo');
+  print('env1.tryGet("FOO") ${env1.tryGet<int>('FOO')}');
   print('env1.isKeyExists("BAR") ${env1.isKeyExists('BAR')}');
   print('env1.tryGet("BAR") ${env1.tryGet('BAR')}');
   print('env1.specialKey ${env1.specialKey}');
@@ -46,8 +45,7 @@ export ENCRYPTION_ENV_ALL_KEY=$(dart run lib/endec.dart 'SWtUem9IdGJiWGZNejVsdQ=
         0, // change this to higher value (e.g: 3) if you want to get from customLoader instead of env file
   ));
   print('env1.specialKey ${env1.specialKey}');
-  final int? maybeSpecialKey = env1.tryGet('MY_SPECIAL_KEY');
-  print("env1.tryGet('MY_SPECIAL_KEY'): $maybeSpecialKey");
+  print("env1.tryGet('MY_SPECIAL_KEY'): ${env1.tryGet<int>('MY_SPECIAL_KEY')}");
   print('env1.test ${env1.test}');
   print('env1.test2 ${env1.test2}');
   print('env1.drink ${env1.drink}');

@@ -1,6 +1,5 @@
 library envystic;
 
-export 'package:meta/meta.dart';
 export 'src/annotation/envystic.dart';
 export 'src/annotation/envystic_all.dart';
 export 'src/annotation/envystic_field.dart';

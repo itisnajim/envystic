@@ -1,11 +1,9 @@
-/// Annotation used to specify an environment variable that should be generated
-/// from the `.env` file specified in the [Envystic] path parameter.
+/// Annotation used to specify an environment variable how should be generated.
 const envysticField = EnvysticField();
 
 typedef CustomLoader = Object? Function();
 
-/// Annotation used to specify an environment variable that should be generated
-/// from the `.env` file specified in the [Envystic] path parameter.
+/// Annotation used to specify an environment variable how should be generated.
 class EnvysticField {
   /// The key name of the field.
   final String? name;
