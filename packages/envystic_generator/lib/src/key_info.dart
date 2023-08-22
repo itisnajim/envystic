@@ -13,6 +13,11 @@ class KeyInfo {
   const KeyInfo(this.output, this.key);
 
   @override
+  String toString() {
+    return "KeyInfo: { output: $output, key: $key }";
+  }
+
+  @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is KeyInfo &&

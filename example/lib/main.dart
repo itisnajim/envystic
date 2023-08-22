@@ -1,6 +1,9 @@
+import 'package:envystic/envystic.dart';
+
 import 'endec.dart';
 import 'env1.dart';
 import 'env_all.dart';
+import 'env_dev.dart';
 
 void main(List<String> arguments) {
   final start = DateTime.now();
@@ -20,26 +23,39 @@ dart --define=ENCRYPTION_ENV1_KEY=$ENCRYPTION_ENV1_KEY --define=ENCRYPTION_ENV_A
   /*
 export ENCRYPTION_ENV1_KEY=$(dart run lib/endec.dart 'S0djUmw4VzVuSU00Nk5DNA==') &&
 export ENCRYPTION_ENV_ALL_KEY=$(dart run lib/endec.dart 'SWtUem9IdGJiWGZNejVsdQ==') &&
-flutter run --dart-define ENCRYPTION_ENV1_KEY=$ENCRYPTION_ENV1_KEY --dart-define ENCRYPTION_ENV_ALL_KEY=$ENCRYPTION_ENV_ALL_KEY
-   */
+  flutter run --dart-define ENCRYPTION_ENV1_KEY=$ENCRYPTION_ENV1_KEY --dart-define ENCRYPTION_ENV_ALL_KEY=$ENCRYPTION_ENV_ALL_KEY
+*/
 
   // Get and decode the ENCRYPTION_ENV1_KEY
   const env1Key = String.fromEnvironment('ENCRYPTION_ENV1_KEY');
-  print('env1Key: $env1Key');
-
+  print("input 1: $env1Key");
   final key1 = endec(env1Key);
-  print('key1: $key1');
-  final env1 = Env1(encryptionKey: key1);
+  print("output 1: $key1");
+  var env1 = Env1(encryptionKey: key1);
   print('env1.key1 ${env1.key1}');
   print('env1.key2 ${env1.key2}');
   print('env1.isKeyExists("FOO") ${env1.isKeyExists('FOO')}');
-  print('env1.tryGet("FOO") ${env1.tryGet('FOO')}');
+  final int? maybeFoo = env1.tryGet('FOO');
+  print('env1.tryGet("FOO") $maybeFoo');
   print('env1.isKeyExists("BAR") ${env1.isKeyExists('BAR')}');
   print('env1.tryGet("BAR") ${env1.tryGet('BAR')}');
   print('env1.specialKey ${env1.specialKey}');
+  env1 = env1.copyWith(
+      valuesPriority: ValuesPriority(
+    custom:
+        0, // change this to higher value (e.g: 3) if you want to get from customLoader instead of env file
+  ));
+  print('env1.specialKey ${env1.specialKey}');
+  final int? maybeSpecialKey = env1.tryGet('MY_SPECIAL_KEY');
+  print("env1.tryGet('MY_SPECIAL_KEY'): $maybeSpecialKey");
   print('env1.test ${env1.test}');
   print('env1.test2 ${env1.test2}');
   print('env1.drink ${env1.drink}');
+
+  print('\n');
+
+  final envDev = EnvDev(encryptionKey: key1);
+  print('envDev.apiKey ${envDev.apiKey}');
 
   print('\n');
 

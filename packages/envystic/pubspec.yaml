@@ -1,6 +1,7 @@
 name: envystic
-description: Simplify and Secure Your Environment Variables (dotenv file or system) in Dart/Flutter.
-version: 0.3.3
+description: "Env Variable Maestro! Seamlessly master config from remote sources, pre-stored via build_runner, or straight from the running system. Enchanting code, mystical security! ✨🌟"
+
+version: 0.4.0
 repository: https://github.com/itisnajim/envystic
 issue_tracker: https://github.com/itisnajim/envystic/issues
 
@@ -14,6 +15,7 @@ environment:
   sdk: ^3.0.5
 
 dependencies: 
+  meta: ^1.9.1
   pointycastle: ^3.7.3
 
 dev_dependencies:

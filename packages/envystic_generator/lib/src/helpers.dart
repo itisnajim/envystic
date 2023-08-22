@@ -6,9 +6,7 @@ import 'dart:mirrors';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:envystic/envystic.dart';
 
-import 'environment_field.dart';
 import 're_case.dart';
-import 'field.dart';
 
 String getEnvKey(
   String fieldKey,
@@ -89,49 +87,6 @@ Set<String> getAllAccessorNames(InterfaceElement interface) {
   }
 
   return accessorNames;
-}
-
-List<EnvironmentField> getAccessors(
-  InterfaceElement interface,
-  LibraryElement library,
-) {
-  var accessorNames = getAllAccessorNames(interface);
-
-  var getters = <EnvironmentField>[];
-  var setters = <EnvironmentField>[];
-  for (var name in accessorNames) {
-    var getter = interface.lookUpGetter(name, library);
-    if (getter != null) {
-      var getterAnn =
-          getFieldAnnotation(getter.variable) ?? getFieldAnnotation(getter);
-      if (getterAnn != null) {
-        var field = getter.variable;
-        getters.add(EnvironmentField(
-          field.name,
-          getterAnn.name,
-          field.type,
-          getterAnn.defaultValue,
-        ));
-      }
-    }
-
-    var setter = interface.lookUpSetter('$name=', library);
-    if (setter != null) {
-      var setterAnn =
-          getFieldAnnotation(setter.variable) ?? getFieldAnnotation(setter);
-      if (setterAnn != null) {
-        var field = setter.variable;
-        setters.add(EnvironmentField(
-          field.name,
-          setterAnn.name,
-          field.type,
-          setterAnn.defaultValue,
-        ));
-      }
-    }
-  }
-
-  return [...getters, ...setters];
 }
 
 String incrementLastInt(String input) {

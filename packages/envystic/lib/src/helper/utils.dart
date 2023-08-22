@@ -1,14 +1,22 @@
 import 'dart:convert';
 
+import 'package:meta/meta.dart';
+
+import '../annotation/envystic_field.dart';
+import '../values_priority.dart';
 import 'encrypter.dart';
+import 'platform_environment_map.dart';
 
 bool _isNullable<T>() => null is T;
 
+bool _isSubtype<S, T>() => <S>[] is List<T>;
+
 T _parseValue<T>(
   String? strValue, {
-  Enum Function(String)? fromString,
+  T Function(String)? fromString,
 }) {
   final isNullable = _isNullable<T>();
+  final isSubtypeEnum = _isSubtype<T, Enum>();
 
   if (strValue == null && !['dynamic', 'Object?'].contains(T.toString())) {
     if (isNullable) return null as T;
@@ -17,35 +25,56 @@ T _parseValue<T>(
 
   if (['String', 'String?'].contains(T.toString())) {
     return strValue as T;
-  } else if (['int', 'int?'].contains(T.toString())) {
-    return (isNullable ? int.tryParse(strValue!) : int.parse(strValue!)) as T;
-  } else if (['double', 'double?'].contains(T.toString())) {
-    return (isNullable ? double.tryParse(strValue!) : double.parse(strValue!))
-        as T;
-  } else if (['num', 'num?'].contains(T.toString())) {
-    return (isNullable ? num.tryParse(strValue!) : num.parse(strValue!)) as T;
-  } else if (['bool', 'bool?'].contains(T.toString())) {
-    return (strValue!.toLowerCase() == 'true') as T;
-  } else if (fromString != null) {
-    // is Enum type
+  }
+
+  if (['int', 'int?'].contains(T.toString())) {
+    final parsedValue =
+        isNullable ? int.tryParse(strValue!) : int.parse(strValue!);
+    return parsedValue as T;
+  }
+
+  if (['double', 'double?'].contains(T.toString())) {
+    final parsedValue =
+        isNullable ? double.tryParse(strValue!) : double.parse(strValue!);
+    return parsedValue as T;
+  }
+
+  if (['num', 'num?'].contains(T.toString())) {
+    final parsedValue =
+        isNullable ? num.tryParse(strValue!) : num.parse(strValue!);
+    return parsedValue as T;
+  }
+
+  if (['bool', 'bool?'].contains(T.toString())) {
+    final parsedValue = strValue!.toLowerCase() == 'true';
+    return parsedValue as T;
+  }
+
+  if (isSubtypeEnum && strValue != null) {
+    if (fromString == null) {
+      throw Exception(
+          'A valid fromString method must be provided to parse `$strValue`.');
+    }
     try {
-      final parsedValue = fromString(strValue!.split('.').last);
-      return parsedValue as T;
+      return fromString(strValue);
     } catch (e) {
       throw Exception(
           'Type `${T.toString()}` does not align with value `$strValue`.');
     }
-  } else if (['dynamic', 'Object?'].contains(T.toString())) {
-    return (strValue == null
-        ? null
-        : (int.tryParse(strValue) ??
-            double.tryParse(strValue) ??
-            num.tryParse(strValue) ??
-            bool.tryParse(strValue) ??
-            strValue)) as T;
-  } else {
-    throw Exception('Type `${T.toString()}` not supported');
   }
+
+  // For dynamic and other unsupported types, a simpler conversion can be used.
+  return (
+    strValue == null
+        ? null
+        : (
+            int.tryParse(strValue) ??
+                double.tryParse(strValue) ??
+                num.tryParse(strValue) ??
+                bool.tryParse(strValue) ??
+                strValue,
+          ),
+  ) as T;
 }
 
 /// **Ignore This Method** Used by the package
@@ -60,6 +89,7 @@ String? encodeValue(String? value, String? encryptionKey) {
 }
 
 /// **Ignore This Method** Used by the package
+@internal
 String? decodeValue(String? encodedValue, String? encryptionKey) {
   if (encodedValue == null) return null;
 
@@ -72,33 +102,45 @@ String? decodeValue(String? encodedValue, String? encryptionKey) {
 }
 
 /// **Ignore This Method** Used by the package
+@internal
 T getEntryValue<T>(
-  String key,
-  String encodedEntries,
-  String? encryptionKey, {
-  Enum Function(String)? fromString,
+  String key, {
+  String? encryptionKey,
+  required String encodedEntries,
+  required ValuesPriority priority,
+  T Function(String)? fromString,
+  Map<String, CustomLoader?> customLoaders = const {},
 }) {
   final bytes = base64.decode(encodedEntries);
   final stringDecoded = String.fromCharCodes(bytes);
   final jsonMap = json.decode(stringDecoded) as Map<String, dynamic>;
-  if (!jsonMap.containsKey(key)) {
-    throw Exception('Key $key not found in .env file');
-  }
-  final encryptedValue = jsonMap[key] as String?;
   String? decryptedValue;
-  try {
-    decryptedValue = decodeValue(encryptedValue, encryptionKey);
-  } catch (e) {
-    throw ArgumentError.value(
-      encryptionKey,
-      "encryptionKey",
-      "Invalid encryption key, $e",
-    );
+  if (jsonMap.containsKey(key)) {
+    final encryptedValue = jsonMap[key] as String?;
+    try {
+      decryptedValue = decodeValue(encryptedValue, encryptionKey);
+    } catch (e) {
+      throw ArgumentError.value(
+        encryptionKey,
+        "encryptionKey",
+        "Invalid encryption key, $e",
+      );
+    }
   }
-  return _parseValue(decryptedValue, fromString: fromString);
+
+  final systemPairs = PlatformEnvironmentMap().getMap();
+  final value = priority.getValue(
+    key,
+    systemPairs: systemPairs,
+    storedPairs: {key: decryptedValue},
+    customLoader: customLoaders[key],
+  );
+
+  return _parseValue(value, fromString: fromString);
 }
 
 /// **Ignore This Method** Used by the package
+@internal
 String? getFieldNameForKey(
   String envKey,
   String encodedKeysFields,
@@ -110,6 +152,7 @@ String? getFieldNameForKey(
 }
 
 /// **Ignore This Method** Used by the package
+@internal
 String? getKeyForFieldName(
   String fieldName,
   String encodedKeysFields,
@@ -124,6 +167,7 @@ String? getKeyForFieldName(
 }
 
 /// **Ignore This Method** Used by the package
+@internal
 bool isEnvKeyExists(
   String envKey,
   String encodedKeysFields,

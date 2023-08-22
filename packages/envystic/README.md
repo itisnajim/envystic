@@ -1,4 +1,4 @@
-# Envystic - Simplified Environment Variable Management for Dart/Flutter
+# Envystic - The Ultimate Dart/Flutter Environment Variable Management Solution
 
 [![pub package](https://img.shields.io/pub/v/envystic.svg)](https://pub.dartlang.org/packages/envystic) [![GitHub license](https://img.shields.io/github/license/itisnajim/envystic)](https://github.com/itisnajim/envystic/blob/main/LICENSE)  [![GitHub issues](https://img.shields.io/github/issues/itisnajim/envystic)](https://github.com/itisnajim/envystic/issues)
 
@@ -10,11 +10,14 @@ Envystic is a Dart/Flutter package that simplifies the management of environment
 
 * **Secure Variable Storage**: Envystic allows you to provide an optional encryption key to encrypt the values of your environment variables, enhancing the security of sensitive information.
 
-* **Annotation-Based Configuration**: Defining environment variables is straightforward with the use of annotations. The Envystic and EnvysticField annotations help generate the necessary code for accessing your environment variables.
+* **Annotation-Based**: Defining environment variables is straightforward with the use of annotations. The Envystic and EnvysticField annotations help generate the necessary code for accessing your environment variables.
 
 * **Custom Key Names**: You can specify custom key names for your environment variables in the .env file, making it easy to reference them in your code.
 
+* **Advanced Loading Options**: Envystic supports advanced loading options, allowing you to fetch environment variables from various sources, including remote configurations, system environment variables, or pre-stored with an optional security.
+
 * **Flutter and Dart Support**: Envystic is designed to work seamlessly with both Flutter and Dart projects, allowing you to manage environment variables consistently across different types of applications.
+
 
 ## Installation
 
@@ -47,21 +50,20 @@ enum RoleEnum {
 
 @envystic
 class Env extends _$Env {
-  // If no encryption, you can omit `super.encryptionKey`
-  // make it like: `const Env();`
-  const Env({super.encryptionKey});
+  const Env._();
 
-  @override
-  @envysticField
-  String get key1;
+  // you can omit `encryptionKey` if no encryption is needed!
+  factory Env({
+    String? encryptionKey,
+    ValuesPriority? valuesPriority,
+  }) = _Env;
 
-  @override
-  @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
-  int? get key2;
-
-  @override
-  @envysticField
-  RoleEnum get role;
+  factory Env.define({
+    required String key1,
+    // The value from 'FOO' in .env will be used
+    @EnvysticField(name: 'FOO') int? key2,
+    required RoleEnum role,
+  }) = _EnvDefine;
 
   // ignored
   String get drink => 'Coffee';
@@ -100,29 +102,64 @@ The `Envystic` annotation supports the following optional parameters:
 These configuration options for efficient environment variable management. Customize file paths, key naming conventions, and enhance security with encryption as needed.
 
 ## EnvysticAll Annotation
-The `EnvysticAll` annotation provides an automatic way to load all keys from the environment file without the need to specify them individually using getters.
+The `EnvysticAll` annotation provides an automatic way to load all keys from the environment file without the need to specify them individually in the `define` factory constructor.
 
 #### Example:
 ```dart
 import 'package:envystic/envystic.dart';
+import 'package:firebase_remote_config/firebase_remote_config';
 
 part 'env_all.g.dart';
 
-@EnvysticAll(path: '.env.example')
-class EnvAll extends _$EnvAll {
-  const Env({super.encryptionKey});
-
-  @override
-  @EnvysticField(
-      name:
-          'MY_SPECIAL_KEY') // This will be pulled from System environment variables if not exists in .env.example
-  int? get specialKey;
+int? specialKeyFetch({
+  required RemoteConfig remoteConfig,
+  int defaultVal = 42,
+}) {
+  int remoteVal = remoteConfig.getInt("specialKey");
+  remoteVal = remoteVal == 0 ? defaultVal : remoteVal;
+  return remoteVal;
 }
 
+int? specialKeyLoader() =>
+    specialKeyFetch(remoteConfig: getRemoteConfigInstance());
+
+@EnvysticAll(
+  path: '.env.example',
+  encryptionKeyOutput: 'example.key',
+)
+class EnvAll extends _$EnvAll {
+  const EnvAll._();
+
+  // you can omit `encryptionKey` if no encryption is needed!
+  factory EnvAll({
+    String? encryptionKey,
+    ValuesPriority? valuesPriority,
+  }) = _EnvAll;
+
+  factory EnvAll.define({
+    @EnvysticField(name: 'MY_SPECIAL_KEY', customLoader: specialKeyLoader)
+    int? specialKey,
+  }) = _EnvAllDefine;
+
+  String get drink => 'Coffee';
+}
+
+
 void main() {
-  final envAll = EnvAll(encryptionKey: encryptionKey);
+  var envAll = EnvAll(encryptionKey: encryptionKey);
   // Access all loaded environment variables
-  print(envAll.specialKey); 
+  print(envAll.specialKey); // this print a value fetched from firebase remote config
+  envAll = envAll.copyWith(
+      valuesPriority: ValuesPriority(
+    custom:
+        0, // change this to higher value (e.g: 3) if you want to get from customLoader instead of from .env file
+  ));
+  print(envAll.specialKey); // this print a value pre-stored in the EnvAll generated class
+  envAll = envAll.copyWith(
+      valuesPriority: ValuesPriority(
+    stored: 0,
+  ));
+  print(envAll.specialKey); // this print a value retrieved from the running system env MY_SPECIAL_KEY var!
   print(envAll.key1);
   print(envAll.key2);
   print(envAll.foo);

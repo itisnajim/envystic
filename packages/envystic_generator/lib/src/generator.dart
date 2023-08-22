@@ -41,16 +41,12 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
     for (var annotatedElement in annotatedClasses) {
       final annotation = annotatedElement.annotation;
       final element = annotatedElement.element;
-      final className = element.name;
-
-      elementsKeys.addAll(
-        {
-          className!: KeyInfo(
-            annotation.encryptionKeyOutput(options),
-            annotation.tryGetOrGenerateKey(options),
-          )
-        },
+      final className = element.name ?? '';
+      final keyInfo = KeyInfo(
+        annotation.encryptionKeyOutput(options),
+        annotation.tryGetOrGenerateKey(options),
       );
+      elementsKeys.addAll({className: keyInfo});
     }
 
     final result = super.generate(library, buildStep);
@@ -95,7 +91,33 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
       );
     }
 
-    final classFields = [
+    List<ParameterElement> parametersFromConstructors(
+        Iterable<ConstructorElement> constructors) {
+      return constructors
+          .where((c) => c.name == "define")
+          .map((e) => e.parameters)
+          .expand((p) => p)
+          .toList();
+    }
+
+    final classesParameters = parametersFromConstructors(
+      [
+        ...element.allSupertypes
+            .expand((e) => e.constructors.where((c) => c.isFactory)),
+        ...element.constructors.where((c) => c.isFactory)
+      ],
+    );
+
+    Set<String> uniqueNames = <String>{};
+    final List<ParameterElement> parameters = [];
+    for (ParameterElement parameter in classesParameters) {
+      if (!uniqueNames.contains(parameter.name)) {
+        uniqueNames.add(parameter.name);
+        parameters.add(parameter);
+      }
+    }
+
+    /*final classFields = [
       ...element.allSupertypes.expand((e) => e.element.fields).where(
           (element) =>
               !element.isStatic &&
@@ -104,35 +126,39 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
               element.name != 'hashCode' &&
               element.name != 'runtimeType'),
       ...element.fields,
-    ];
-    final interface = getInterface(element);
-
-    final fieldAnnotations = getAccessors(interface, element.library);
+    ];*/
 
     final fieldEnumType = <String, String>{};
 
     final fields = <Field>[];
+    final definedFields = <Field>[];
 
     try {
-      for (final fieldElement in classFields) {
-        final annotation = fieldAnnotations
-            .where((e) => e.name == fieldElement.name)
+      for (final indexedParameterElement in parameters.indexed) {
+        final parameterElement = indexedParameterElement.$2;
+        //if (annotation == null) continue;
+        //final isAbstract = parameterElement.isAbstract || parameterElement.getter?.isAbstract == true;
+        final annotation = parameterElement.metadata
+            .map(
+              (a) => a.element == null
+                  ? null
+                  : getParameterInfo(a.computeConstantValue()),
+            )
+            .toList()
             .firstOrNull;
-        if (annotation == null) continue;
-        //final isAbstract = fieldElement.isAbstract || fieldElement.getter?.isAbstract == true;
-
-        final nameOverride = annotation.nameOverride;
-        final defaultValue = annotation.defaultValue;
+        final nameOverride = annotation?.name;
+        final defaultValue = annotation?.defaultValue;
+        final customLoader = annotation?.customLoader;
 
         final typeDisplayName =
-            fieldElement.type.getDisplayString(withNullability: false);
+            parameterElement.type.getDisplayString(withNullability: false);
 
-        final type = getType(fieldElement.type);
+        final type = getType(parameterElement.type);
 
-        final typePrefix = fieldElement.typePrefix;
-        final isNullable =
-            fieldElement.type.nullabilitySuffix == NullabilitySuffix.question;
-        final name = fieldElement.name;
+        final isNullable = parameterElement.type.nullabilitySuffix ==
+            NullabilitySuffix.question;
+
+        final name = parameterElement.name;
 
         final envKey = getEnvKey(name, keyFormat, nameOverride);
 
@@ -141,22 +167,23 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
             defaultValue?.toStringValue();
 
         final field = Field(
-          element: fieldElement,
+          element: parameterElement,
           name: name,
+          customLoader: customLoader,
           type: type,
-          dartType: fieldElement.type,
+          dartType: parameterElement.type,
           isNullable: isNullable,
           envKey: envKey,
           value: value,
-          typePrefix: typePrefix,
           typeDisplayName: typeDisplayName,
         );
 
         fields.add(field);
+        definedFields.add(field);
 
-        if (fieldElement.type.isEnum) {
+        if (parameterElement.type.isEnum) {
           fieldEnumType.addAll({
-            escapeDartString(fieldElement.name):
+            escapeDartString(parameterElement.name):
                 field.typeWithPrefix(withNullability: false),
           });
         }
@@ -171,7 +198,6 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
         ..removeWhere((key, _) => fields.map((e) => e.envKey).contains(key));
       remainingValues.forEach((key, value) {
         var name = key.camelCase;
-        // print('remainingValues: key $key, value: $value, fieldName: $name');
         if (fields.where((f) => f.name == name).isNotEmpty) {
           name = incrementLastInt(name);
         }
@@ -204,7 +230,8 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
 
     final List<MapEntry<String, dynamic>> entries = [];
     final List<MapEntry<String, String>> envKeyFieldPairs = [];
-    final List<String> fieldsValues = [];
+    final Map<String, String> fieldsValues = {};
+
     for (final field in fields) {
       final name = field.name;
       final envKey = field.envKey;
@@ -215,7 +242,7 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
         encodeValue(value, keyInfo?.key ?? optionsEncryptionKey),
       ));
       envKeyFieldPairs.add(MapEntry(envKey, name));
-      fieldsValues.add(field.generate());
+      fieldsValues.addAll({field.getterDefinition(): field.getterValue()});
     }
 
     final entriesJsonStr = jsonEncode(Map.fromEntries(entries));
@@ -225,48 +252,79 @@ class EnvysticGenerator extends GeneratorForAnnotation<Envystic> {
     final encodedKeysFieldsJson =
         base64.encode(envKeyFieldPairsJsonStr.codeUnits);
 
-    final buffer = StringBuffer();
-
-    final getForFieldOverride = fieldEnumType.isEmpty
-        ? ''
-        : """
-@override
-T getForField<T>(String fieldName) => getEntryValue(
-      fieldName,
-      encodedEntries,
-      encryptionKey,
-      fromString: fieldEnumValues[fieldName]?.byName,
+    final Map<String, String> definedFieldsValues = Map.fromEntries(
+      definedFields.map(
+        (f) => MapEntry(f.getterDefinition(), f.getterValue()),
+      ),
     );
 
-""";
-
-    final fieldEnumValuesStr = fieldEnumType.isEmpty
-        ? ''
-        : ' Map<String, List<Enum>> get fieldEnumValues => ${fieldEnumType.map((k, v) => MapEntry(k, '$v.values'))};';
-
+    final buffer = StringBuffer();
     buffer.writeln("""
+      final _privateConstructorUsedError = UnsupportedError(
+          'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by envystic and you are not supposed to need it nor use it.');
+
       const String _encodedEntries = ${escapeDartString(encodedJson)};
       const String _encodedKeysFields = ${escapeDartString(encodedKeysFieldsJson)};
 
-      class _\$$className extends EnvysticInterface {
-        const _\$$className({super.encryptionKey});
+      abstract class _\$$className with IEnvystic {
+        const _\$$className();
 
         @override
-        String get encodedEntries => _encodedEntries;
+        String get encodedEntries\$ => _encodedEntries;
         @override
-        String get encodedKeysFields => _encodedKeysFields;
+        String get encodedKeysFields\$ => _encodedKeysFields;
+        @override
+        ValuesPriority get valuesPriority\$ => ValuesPriority();
 
-        ${fieldsValues.join('\n')}
+        ${fieldsValues.keys.map((key) => '$key => throw _privateConstructorUsedError;').join('\n')}
 
-        $getForFieldOverride$fieldEnumValuesStr
-      }""");
+        $className copyWith({required ValuesPriority valuesPriority}) =>
+              throw _privateConstructorUsedError;
+      }
+      
+      
+      class _$className extends $className {
+        @override
+        final String? encryptionKey\$;
+        @override
+        final ValuesPriority valuesPriority\$;
+        const _$className({
+          String? encryptionKey,
+          ValuesPriority? valuesPriority,
+        })  : encryptionKey\$ = encryptionKey,
+              valuesPriority\$ = valuesPriority ?? const ValuesPriority(),
+              super._();
+
+        ${fieldsValues.entries.map((entry) => '@override\n${entry.key} => ${entry.value};').join('\n')}
+
+        @override
+        Map<String, CustomLoader?> get customLoaders\$ => {
+          ${fields.where((e) => e.customLoader != null).map((e) => "'${e.name}': ${e.customLoader}").join('\n')}
+        };
+
+        @override
+        $className copyWith({required ValuesPriority valuesPriority}) => _$className(
+          encryptionKey: encryptionKey\$,
+          valuesPriority: valuesPriority,
+        );
+      }
+
+      class _${className}Define extends $className {
+        const _${className}Define(
+          ${definedFieldsValues.isEmpty ? '' : '{\n ${definedFieldsValues.keys.indexed.map((indexKey) => '${!Field.isGetterDefinitionNullable(indexKey.$2) ? 'required ' : ''}this.${definedFields[indexKey.$1].name},').join('\n')}}'}
+          ) : super._();
+
+
+        ${definedFields.map((e) => '@override\n${e.propertyDefinition()};').join('\n')}
+      }
+      """);
 
     return annotation
         .writeEncryptionKeyIfNeeded(
           keyInfo?.key ?? optionsEncryptionKey,
           options,
         )
-        .then((value) => buffer.toString());
+        .then((_) => buffer.toString());
   }
 }
 
@@ -318,15 +376,13 @@ extension ConstantReaderExt on ConstantReader {
       mustGenerateEncryption(options) || encryptionKeyOutput(options) != null;
 
   String? tryGetOrGenerateKey(BuilderOptions? options) {
-    final String? optionsEncryptionKeyOutput = options.encryptionKeyOutput;
+    final String? keyOutput = encryptionKeyOutput(options);
     var encryptionKey = !mustGenerateEncryption(options)
         ? null
         : generateRandomEncryptionKey(16);
 
-    if (optionsEncryptionKeyOutput != null) {
-      encryptionKey =
-          EncryptionKeyFile(optionsEncryptionKeyOutput).readSync() ??
-              encryptionKey;
+    if (keyOutput != null) {
+      encryptionKey = EncryptionKeyFile(keyOutput).readSync() ?? encryptionKey;
     }
     return encryptionKey;
   }
@@ -337,11 +393,13 @@ extension ConstantReaderExt on ConstantReader {
   ) {
     if (encryptionKey == null) return Future.value(null);
     final String? optionsEncryptionKeyOutput = options.encryptionKeyOutput;
+    final filePath = encryptionKeyOutput(options);
 
-    if (encryptionKeyOutput(options) == null) return Future.value(null);
-    if (optionsEncryptionKeyOutput == encryptionKeyOutput(options)) {
-      Future.value(null);
+    if (filePath == null) return Future.value(null);
+    if (optionsEncryptionKeyOutput == filePath) {
+      return Future.value(null);
     }
-    return EncryptionKeyFile(encryptionKeyOutput(options)).write(encryptionKey);
+
+    return EncryptionKeyFile(filePath).write(encryptionKey);
   }
 }

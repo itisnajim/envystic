@@ -2,6 +2,8 @@
 /// from the `.env` file specified in the [Envystic] path parameter.
 const envysticField = EnvysticField();
 
+typedef CustomLoader = Object? Function();
+
 /// Annotation used to specify an environment variable that should be generated
 /// from the `.env` file specified in the [Envystic] path parameter.
 class EnvysticField {
@@ -9,7 +11,14 @@ class EnvysticField {
   final String? name;
 
   /// The default value for the field.
+  /// will be used if null value found in the 3 levels:
+  /// `system`, `.env file` and [customLoader]
   final Object? defaultValue;
+
+  /// Additional (to `system` and `.env file`) a custom way to load the value
+  /// of this field. [customLoader] Can be used to load the value from a
+  /// remote source, e.g: Rest Api, Firebase Remote Config, etc..,
+  final CustomLoader? customLoader;
 
   /// Creates an instance of [EnvysticField].
   ///
@@ -18,5 +27,6 @@ class EnvysticField {
   const EnvysticField({
     this.name,
     this.defaultValue,
+    this.customLoader,
   });
 }

@@ -21,6 +21,10 @@ class EncryptionKeyFile {
     return File(path).writeAsString(key);
   }
 
+  Future<File> writeIfNeeded(String key) {
+    return File(path).writeAsString(key);
+  }
+
   Future<String?> read() async {
     final key = await _readFileContent(path);
     return (key?.trim().isEmpty ?? true) ? null : key;

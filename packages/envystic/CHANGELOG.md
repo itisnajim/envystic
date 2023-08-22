@@ -1,3 +1,8 @@
+## 0.4.0
+
+- Add a way to load env var value from a remote source (e.g: Firebase remote config)
+
+
 ## 0.3.3
 
 - Fix issue when using `dynamic` type, 

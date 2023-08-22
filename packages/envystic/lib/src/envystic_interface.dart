@@ -1,14 +1,14 @@
+import 'annotation/envystic_field.dart';
 import 'helper/utils.dart';
+import 'values_priority.dart';
 
-/// An abstract parent class for all Envystic generated classes.
-/// Used to add support for equality comparison using `==`,
-/// computing hash codes and to add support methods.
-abstract class EnvysticInterface {
-  const EnvysticInterface({this.encryptionKey});
-  final String? encryptionKey;
+mixin IEnvystic {
+  String? get encryptionKey$ => null;
+  ValuesPriority get valuesPriority$ => ValuesPriority();
 
-  String get encodedEntries => throw UnimplementedError();
-  String get encodedKeysFields => throw UnimplementedError();
+  String get encodedEntries$ => throw UnimplementedError();
+  String get encodedKeysFields$ => throw UnimplementedError();
+  Map<String, CustomLoader?> get customLoaders$ => {};
 
   /// Retrieves the value associated with the given [fieldName] from the loaded environment entries.
   /// The type of the returned value is inferred based on the specified generic type [T].
@@ -26,17 +26,27 @@ abstract class EnvysticInterface {
   /// In this example, `specialKey` is retrieved from the loaded environment entries as an integer.
   /// If the field does not exist or the value cannot be cast to an integer,
   /// this method will throw an exception.
-  T getForField<T>(String fieldName) =>
-      getEntryValue(fieldName, encodedEntries, encryptionKey);
+  T getForField<T>(
+    String fieldName, {
+    T Function(String)? fromString,
+  }) =>
+      getEntryValue(
+        fieldName,
+        encryptionKey: encryptionKey$,
+        encodedEntries: encodedEntries$,
+        priority: valuesPriority$,
+        fromString: fromString,
+        customLoaders: customLoaders$,
+      );
 
   /// Checks if the provided [envKey] exists in the loaded environment keys.
   /// Returns `true` if the key exists, `false` otherwise.
-  bool isKeyExists(String envKey) => isEnvKeyExists(envKey, encodedKeysFields);
+  bool isKeyExists(String envKey) => isEnvKeyExists(envKey, encodedKeysFields$);
 
   /// Gets the field name associated with the provided [envKey].
   /// If the [envKey] exists, returns the corresponding field name; otherwise, returns `null`.
   String? getFieldName(String envKey) =>
-      getFieldNameForKey(envKey, encodedKeysFields);
+      getFieldNameForKey(envKey, encodedKeysFields$);
 
   /// Retrieves the value associated with the given [envKey] from the loaded environment entries.
   /// The type of the returned value is inferred based on the actual field type.
@@ -72,10 +82,10 @@ abstract class EnvysticInterface {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is EnvysticInterface &&
-          encryptionKey == other.encryptionKey &&
-          encodedEntries == other.encodedEntries;
+      other is IEnvystic &&
+          encryptionKey$ == other.encryptionKey$ &&
+          encodedKeysFields$ == other.encodedKeysFields$;
 
   @override
-  int get hashCode => encryptionKey.hashCode ^ encodedEntries.hashCode;
+  int get hashCode => encryptionKey$.hashCode ^ encodedKeysFields$.hashCode;
 }

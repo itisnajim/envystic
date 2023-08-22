@@ -11,34 +11,29 @@ enum TestEnum2 {
   qux,
 }
 
+int? specialKeyLoader42() => 42;
+
 @Envystic(path: '.env.example')
 class Env1 extends _$Env1 {
-  const Env1({super.encryptionKey});
+  const Env1._();
 
-  @override
-  @envysticField // Default env key name assigned: 'KEY1'
-  String get key1;
+  // you can omit `encryptionKey` if no encryption is needed!
+  factory Env1({
+    String? encryptionKey,
+    ValuesPriority? valuesPriority,
+  }) = _Env1;
 
-  @override
-  @EnvysticField(name: 'FOO') // The value from 'FOO' in .env will be used
-  int? get key2;
-
-  @override
-  @EnvysticField(
-      name: 'MY_SPECIAL_KEY') // Pulled from system environment variables
-  int? get specialKey;
-
-  @override
-  @EnvysticField()
-  e.TestEnum get test;
-
-  @override
-  @EnvysticField()
-  TestEnum2? get test2;
-
-  @override
-  @envysticField
-  get notExists;
+  factory Env1.define({
+    required String key0,
+    required String key1,
+    // The value from 'FOO' in .env will be used
+    @EnvysticField(name: 'FOO') int? key2,
+    @EnvysticField(name: 'MY_SPECIAL_KEY', customLoader: specialKeyLoader42)
+    int? specialKey,
+    required e.TestEnum test,
+    TestEnum2? test2,
+    dynamic notExists,
+  }) = _Env1Define;
 
   // ignored
   String get drink => 'Coffee';
